@@ -14,15 +14,15 @@ namespace nMethods_3
             watch.Start();
             slau.LOS();
             watch.Stop();
-            
-            slau.WriteToFile("x.txt", "LOS",watch.ElapsedMilliseconds * 1000);
+
+            slau.WriteToFile("x.txt", "LOS", watch.ElapsedMilliseconds * 1000);
             slau.Clear();
 
             watch.Start();
             slau.LOSWithLU();
             watch.Stop();
 
-            slau.WriteToFile("x.txt", "LOS + LU",watch.ElapsedMilliseconds * 1000);
+            slau.WriteToFile("x.txt", "LOS + LU", watch.ElapsedMilliseconds * 1000);
             slau.Clear();
 
             watch.Start();

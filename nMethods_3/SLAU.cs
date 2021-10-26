@@ -122,7 +122,7 @@ namespace nMethods_3
             Vector<real> product = new Vector<real>(n);
 
             for (uint i = 0; i < n; i++)
-                product.vec[i] = 1/ Math.Sqrt(di.vec[i]) * vector.vec[i];
+                product.vec[i] = 1 / Math.Sqrt(di.vec[i]) * vector.vec[i];
 
             return product;
         }
@@ -198,8 +198,6 @@ namespace nMethods_3
 
             r = MultDi(pr - Mult(x));
 
-           // Array.Copy(r.vec, z.vec, n);
-            //Array.Copy(MultDi(z).vec, p.vec, n);
             z = MultDi(r);
             p = MultDi(Mult(z));
 
@@ -215,7 +213,7 @@ namespace nMethods_3
                 tmp = MultDi(Mult(MultDi(r)));
 
                 beta = -(p * tmp) / (p * p);
-                z = r + beta * z;
+                z = MultDi(r) + beta * z;
                 p = tmp + beta * p;
             }
 
