@@ -30,6 +30,8 @@ namespace nMethods_3
             watch.Stop();
 
             slau.WriteToFile("x.txt", "LOS + DI", watch.ElapsedMilliseconds * 1000);
+
+            slau.GenMatrixHilbert(3);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -189,7 +190,7 @@ namespace nMethods_3
             countIter = index;
         }
 
-        public void LOSWithDi() // TODO
+        public void LOSWithDi()
         {
             uint index;
             real alpha, beta;
@@ -298,7 +299,7 @@ namespace nMethods_3
 
             Array.Copy(vector.vec, result.vec, n);
 
-            for (int i = (int)(n - 1); i >= 0; i--)
+            for (int i = (int)n - 1; i >= 0; i--)
             {
                 uint i0 = ig.vec[i];
                 uint i1 = ig.vec[i + 1];
@@ -329,6 +330,43 @@ namespace nMethods_3
             Array.Clear(z.vec, 0, z.vec.Length);
             Array.Clear(p.vec, 0, p.vec.Length);
             Array.Clear(x.vec, 0, x.vec.Length);
+        }
+
+        public void GenMatrixHilbert(uint dim)
+        {
+            Array.Resize<uint>(ref ig.vec, (int)dim + 1);
+            Array.Resize<real>(ref di.vec, (int)dim);
+            Array.Resize<real>(ref ggl.vec, (int)dim);
+            Array.Resize<real>(ref ggu.vec, (int)dim);
+
+            List<uint> jgList = new List<uint>(); // при разной размерности матрицы явно не видно кол-во элементов в jg
+
+            ig.vec[0] = 0;
+
+            for (uint i = 0; i < dim; i++)
+            {
+                di.vec[i] = 1.0 / (2 * (i + 1) - 1);
+                ig.vec[i + 1] = ig.vec[i] + i;
+            }
+
+            for (uint i = 0; i < dim; i++)
+            {
+                real sum = 0;
+                uint i0 = ig.vec[i];
+                uint i1 = ig.vec[i + 1];
+                uint j = i - (i1 - i0);
+
+                for (uint k = i0; k < i1; k++, j++)
+                {
+                    sum = 1.0 / (i + 1 + j + 1 - 1);
+                    ggl.vec[k] = sum;
+                    ggu.vec[k] = sum;
+                    jgList.Insert((int)k, j);
+                }
+            }
+
+            Array.Resize<uint>(ref jg.vec, jgList.Count());
+            jg.vec = jgList.ToArray();
         }
     }
 }
