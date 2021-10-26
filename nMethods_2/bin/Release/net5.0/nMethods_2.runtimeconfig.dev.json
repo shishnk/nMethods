@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "/home/hukutka/.dotnet/store/|arch|/|tfm|",
+      "/home/hukutka/.nuget/packages"
+    ]
+  }
+}

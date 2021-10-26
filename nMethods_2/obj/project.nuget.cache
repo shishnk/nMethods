@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "mXlJD2tNcbEMTRf3B9eaAns+OhxxIbeylGjPghrfweLC+7d3nwS9mYQOFc1a37+57BVxeMgX49LAe+QVFRPLow==",
+  "success": true,
+  "projectFilePath": "/home/hukutka/repos/nMethods/nMethods_2/nMethods_2.csproj",
+  "expectedPackageFiles": [
+    "/home/hukutka/.nuget/packages/microsoft.aspnetcore.app.ref/5.0.0/microsoft.aspnetcore.app.ref.5.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
