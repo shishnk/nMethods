@@ -189,7 +189,7 @@ namespace nMethods_3
             countIter = index;
         }
 
-        public void LOSWithDi()
+        public void LOSWithDi() // TODO
         {
             uint index;
             real alpha, beta;
