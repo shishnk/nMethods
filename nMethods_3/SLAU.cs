@@ -330,13 +330,20 @@ namespace nMethods_3
             Array.Clear(x.vec, 0, x.vec.Length);
         }
 
-        private void Resize(uint dim)
+        private void Resize()
         {
-            Array.Resize<uint>(ref ig.vec, (int)dim + 1);
-            Array.Resize<real>(ref di.vec, (int)dim);
-            Array.Resize<real>(ref ggl.vec, (int)dim);
-            Array.Resize<real>(ref ggu.vec, (int)dim);
-            Array.Resize<real>(ref pr.vec, (int)dim);
+            Array.Resize<uint>(ref ig.vec, (int)n + 1);
+            Array.Resize<real>(ref di.vec, (int)n);
+            Array.Resize<real>(ref ggl.vec, (int)(n * (n - 1) / 2));
+            Array.Resize<real>(ref ggu.vec, (int)(n * (n - 1) / 2));
+            Array.Resize<real>(ref pr.vec, (int)n);
+            Array.Resize<real>(ref dinew.vec, (int)n);
+            Array.Resize<real>(ref gglnew.vec, (int)(n * (n - 1) / 2));
+            Array.Resize<real>(ref ggunew.vec, (int)(n * (n - 1) / 2));
+            Array.Resize<real>(ref r.vec, (int)n);
+            Array.Resize<real>(ref z.vec, (int)n);
+            Array.Resize<real>(ref p.vec, (int)n);
+            Array.Resize<real>(ref x.vec, (int)n);
         }
 
         private void Copy()
@@ -348,7 +355,9 @@ namespace nMethods_3
 
         public void GenMatrixHilbert(uint dim)
         {
-            Resize(dim);
+            n = dim;
+
+            Resize();
 
             List<uint> jgList = new List<uint>(); // при разной размерности матрицы явно не видно кол-во элементов в jg
 
@@ -379,17 +388,17 @@ namespace nMethods_3
             Array.Resize<uint>(ref jg.vec, jgList.Count());
             jg.vec = jgList.ToArray();
             Copy();
-            GenPrHilbert(dim);
+            GenPrHilbert();
         }
 
-        private void GenPrHilbert(uint dim)
+        private void GenPrHilbert()
         {
-            for (uint i = 0; i < dim; i++)
+            for (uint i = 0; i < n; i++)
             {
                 pr.vec[i] = 0;
 
-                for (uint j = 0; j < dim; j++)
-                    pr.vec[i] += (j + 1) / (i + j + 1);
+                for (real j = 0; j < n; j++)
+                    pr.vec[i] += (j + 1.0) / (i + j + 1.0);
             }
         }
     }
