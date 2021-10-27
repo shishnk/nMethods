@@ -84,9 +84,7 @@ namespace nMethods_3
                 ggunew = new Vector<real>((uint)ggu.vec.Length);
                 dinew = new Vector<real>(n);
 
-                Array.Copy(di.vec, dinew.vec, n);
-                Array.Copy(ggl.vec, gglnew.vec, (uint)ggl.vec.Length);
-                Array.Copy(ggu.vec, ggunew.vec, (uint)ggu.vec.Length);
+                Copy();
 
                 for (uint i = 0; i < ig.vec.Length; i++)
                     ig.vec[i]--;
@@ -332,12 +330,25 @@ namespace nMethods_3
             Array.Clear(x.vec, 0, x.vec.Length);
         }
 
-        public void GenMatrixHilbert(uint dim)
+        private void Resize(uint dim)
         {
             Array.Resize<uint>(ref ig.vec, (int)dim + 1);
             Array.Resize<real>(ref di.vec, (int)dim);
             Array.Resize<real>(ref ggl.vec, (int)dim);
             Array.Resize<real>(ref ggu.vec, (int)dim);
+            Array.Resize<real>(ref pr.vec, (int)dim);
+        }
+
+        private void Copy()
+        {
+            Array.Copy(di.vec, dinew.vec, di.vec.Length);
+            Array.Copy(ggl.vec, gglnew.vec, (uint)ggl.vec.Length);
+            Array.Copy(ggu.vec, ggunew.vec, (uint)ggu.vec.Length);
+        }
+
+        public void GenMatrixHilbert(uint dim)
+        {
+            Resize(dim);
 
             List<uint> jgList = new List<uint>(); // при разной размерности матрицы явно не видно кол-во элементов в jg
 
@@ -367,6 +378,19 @@ namespace nMethods_3
 
             Array.Resize<uint>(ref jg.vec, jgList.Count());
             jg.vec = jgList.ToArray();
+            Copy();
+            GenPrHilbert(dim);
+        }
+
+        private void GenPrHilbert(uint dim)
+        {
+            for (uint i = 0; i < dim; i++)
+            {
+                pr.vec[i] = 0;
+
+                for (uint j = 0; j < dim; j++)
+                    pr.vec[i] += (j + 1) / (i + j + 1);
+            }
         }
     }
 }
