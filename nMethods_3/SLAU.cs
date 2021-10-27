@@ -9,32 +9,32 @@ namespace nMethods_3
 {
     class SLAU
     {
-        private uint n;
-        private uint maxIter;
-        private uint countIter;
-        private real eps;
-        private real squareNorm;
-        private Vector<uint> ig;
-        private Vector<uint> jg;
-        private Vector<real> ggl;
-        private Vector<real> ggu;
-        private Vector<real> di;
-        private Vector<real> gglnew;
-        private Vector<real> ggunew;
-        private Vector<real> dinew;
-        private Vector<real> pr;
-        private Vector<real> r;
-        private Vector<real> z;
-        private Vector<real> p;
-        private Vector<real> x;
+        private uint n; // размерность матрицы
+        private uint maxIter; // максимальное кол-во итераций
+        private uint countIter; // счетчик итераций
+        private real eps; // точность решения
+        private real squareNorm; // квадрат норм (для условия выхода)
+        private Vector<uint> ig; // указатели начала строк
+        private Vector<uint> jg; // номера столбцов внедиагональных элементов
+        private Vector<real> ggl; // элементы нижнего треугольника
+        private Vector<real> ggu; // элементы верхнего треугольника
+        private Vector<real> di; // диагональные элементы
+        private Vector<real> gglnew; // элементы нижнего при разложении LU
+        private Vector<real> ggunew; // элементы верхнего при разложении LU
+        private Vector<real> dinew; // диагональные элементы при разложении LU
+        private Vector<real> pr; // вектор правой части
+        private Vector<real> r; // вектор невязки
+        private Vector<real> z; // вектор спуска (сопряженное направление)
+        private Vector<real> p; // вспомогательный вектор
+        private Vector<real> x; // вектор начального приближения
 
         public SLAU(string pathParametrs, string pathRows, string pathColumns, string pathLower,
                     string pathUpper, string pathDiag, string pathVector)
-        {
+        {   // чтение всех данных
             try
             {
                 using (var sr = new StreamReader(pathParametrs))
-                {
+                {   
                     n = uint.Parse(sr.ReadLine());
                     maxIter = uint.Parse(sr.ReadLine());
                     eps = real.Parse(sr.ReadLine());
@@ -84,8 +84,9 @@ namespace nMethods_3
                 ggunew = new Vector<real>((uint)ggu.vec.Length);
                 dinew = new Vector<real>(n);
 
-                Copy();
+                Copy(); // копирование элементов для разложения LU
 
+                // используем декремент для прохождения с 0
                 for (uint i = 0; i < ig.vec.Length; i++)
                     ig.vec[i]--;
 
@@ -116,7 +117,9 @@ namespace nMethods_3
             return product;
         }
 
-        private Vector<real> MultDi(Vector<real> vector)
+        private Vector<real> MultDi(Vector<real> vector) // умножение матрицы на вектор 
+                                                        // при диагональном предобуславливании,
+                                                        // сразу применен ход для решения СЛАУ
         {
             Vector<real> product = new Vector<real>(n);
 
@@ -126,7 +129,7 @@ namespace nMethods_3
             return product;
         }
 
-        public void LOS()
+        public void LOS() // Локально-оптимальная схема без предобуславливания
         {
             uint index;
             real alpha, beta;
@@ -157,7 +160,7 @@ namespace nMethods_3
             countIter = index;
         }
 
-        public void LOSWithLU()
+        public void LOSWithLU() // Локально-оптимальная схема с факторизацией LU
         {
             uint index;
             real alpha, beta;
@@ -188,7 +191,7 @@ namespace nMethods_3
             countIter = index;
         }
 
-        public void LOSWithDi()
+        public void LOSWithDi() // Локально-оптимальная схема с диагональным предобуславливанием
         {
             uint index;
             real alpha, beta;
@@ -359,7 +362,7 @@ namespace nMethods_3
 
             Resize();
 
-            List<uint> jgList = new List<uint>(); // при разной размерности матрицы явно не видно кол-во элементов в jg
+            List<uint> jgList = new List<uint>(); // при разной размерности матрицы явно не видно кол-во элементов в jg // TODO 
 
             ig.vec[0] = 0;
 
