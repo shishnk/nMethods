@@ -241,7 +241,7 @@ namespace nMethods_3
             countIter = index;
         }
 
-        public void CGM()
+        public void CGM() // Метод сопряженных градиентов
         {
             uint index;
             real alpha, beta;
@@ -266,7 +266,7 @@ namespace nMethods_3
             countIter = index;
         }
 
-        public void CGMWithDi()
+        public void CGMWithDi() // Метод сопряженных градиентов с диагональным предобуславливанием
         {
             uint index;
             real alpha, beta;
@@ -293,7 +293,7 @@ namespace nMethods_3
             countIter = index;
         }
 
-        public void CGMWithCholesky()
+        public void CGMWithCholesky() // Метод сопряженных градиентов с неполной факторизацией
         {
             uint index;
             real alpha, beta;
@@ -322,7 +322,7 @@ namespace nMethods_3
             countIter = index;
         }
 
-        public void CGMAssymetric()
+        public void CGMAssymetric() // Метод сопряженных градиентов для несимметричных матриц
         {
             uint index;
             real alpha, beta;
@@ -352,7 +352,7 @@ namespace nMethods_3
             x = Reverse(x);
         }
 
-        public void CGMAssymetricDi()
+        public void CGMAssymetricDi() // Метод сопряженных градиентов для несимметричных матриц с диагональным предобуславливанием
         {
             uint index;
             real alpha, beta;
@@ -484,7 +484,7 @@ namespace nMethods_3
             }
         }
 
-        private Vector<real> DirectT(Vector<real> vector)
+        private Vector<real> DirectT(Vector<real> vector) // U^-T
         {
             Vector<real> result = new Vector<real>(n);
 
@@ -507,7 +507,7 @@ namespace nMethods_3
             return result;
         }
 
-        private Vector<real> ReverseT(Vector<real> vector)
+        private Vector<real> ReverseT(Vector<real> vector) // L^-T
         {
             Vector<real> result = new Vector<real>(n);
 
