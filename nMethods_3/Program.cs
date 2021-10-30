@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+
+using real = System.Double;
 
 namespace nMethods_3
 {
@@ -35,28 +39,67 @@ namespace nMethods_3
             #endregion
 
             #region Hilbert
-            Console.WriteLine("Введите размерность:");
+            // Console.WriteLine("Введите размерность:");
 
-            slau.GenMatrixHilbert(uint.Parse(Console.ReadLine()));
+            // slau.GenMatrixHilbert(uint.Parse(Console.ReadLine()));
+            // watch.Start();
+            // slau.LOS();
+            // watch.Stop();
+
+            // slau.WriteToFile("x(Hilbert).txt", "LOS | Hilbert", watch.ElapsedMilliseconds * 1000);
+            // slau.Clear();
+
+            // watch.Start();
+            // slau.LOSWithLU();
+            // watch.Stop();
+
+            // slau.WriteToFile("x(Hilbert).txt", "LOS + LU | Hilbert", watch.ElapsedMilliseconds * 1000);
+            // slau.Clear();
+
+            // watch.Start();
+            // slau.LOSWithDi();
+            // watch.Stop();
+
+            // slau.WriteToFile("x(Hilbert).txt", "LOS + DI | Hilbert", watch.ElapsedMilliseconds * 1000);
+            #endregion
+
+            #region CMG
+            // watch.Start();
+            // slau.CGM();
+            // watch.Stop();
+
+            // slau.WriteToFile("x.txt", "CMG", watch.ElapsedMilliseconds * 1000);
+            // slau.Clear();
+
+            // watch.Start();
+            // slau.CGMWithCholesky();
+            // watch.Stop();
+
+            // slau.WriteToFile("x.txt", "CMG + LL^T", watch.ElapsedMilliseconds * 1000);
+            // slau.Clear();
+
+            // watch.Start();
+            // slau.CGMWithDi();
+            // watch.Stop();
+
+            // slau.WriteToFile("x.txt", "CMG + DI", watch.ElapsedMilliseconds * 1000);
+            // slau.Clear();            
+            #endregion
+
+            #region CMG for asymmetric matrixes
             watch.Start();
-            slau.LOS();
+            slau.CGMAssymetric();
             watch.Stop();
-            
-            slau.WriteToFile("x(Hilbert).txt", "LOS | Hilbert", watch.ElapsedMilliseconds * 1000);
+
+            slau.WriteToFile("x.txt", "CMG for assymetric matrixes", watch.ElapsedMilliseconds * 1000);
             slau.Clear();
 
             watch.Start();
-            slau.LOSWithLU();
+            slau.CGMAssymetricDi();
             watch.Stop();
 
-            slau.WriteToFile("x(Hilbert).txt", "LOS + LU | Hilbert", watch.ElapsedMilliseconds * 1000);
+            slau.WriteToFile("x.txt", "CMG for assymetric matrixes + DI", watch.ElapsedMilliseconds * 1000);
             slau.Clear();
-
-            watch.Start();
-            slau.LOSWithDi();
-            watch.Stop();
-
-            slau.WriteToFile("x(Hilbert).txt", "LOS + DI | Hilbert", watch.ElapsedMilliseconds * 1000);
             #endregion
         }
     }
