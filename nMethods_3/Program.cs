@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-
-using real = System.Double;
 
 namespace nMethods_3
 {
