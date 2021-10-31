@@ -158,7 +158,7 @@ namespace nMethods_3
             r = pr - Mult(x);
 
             Array.Copy(r.vec, z.vec, n);
-            Array.Copy(Mult(z).vec, p.vec, n);
+            p = Mult(z);
 
             squareNorm = r * r;
 
@@ -187,6 +187,7 @@ namespace nMethods_3
             Vector<real> tmp = new Vector<real>(n);
 
             LU();
+
             r = Direct(pr - MultDi(x));
             z = Reverse(r);
             p = Direct(Mult(z));
@@ -218,7 +219,6 @@ namespace nMethods_3
             Vector<real> tmp = new Vector<real>(n);
 
             r = MultDi(pr - Mult(x));
-
             z = MultDi(r);
             p = MultDi(Mult(z));
 
@@ -250,7 +250,7 @@ namespace nMethods_3
             Vector<real> temp = new Vector<real>(n);
 
             r = pr - Mult(x);
-            z = r;
+            Array.Copy(r.vec, z.vec, n);
 
             for (index = 0; index < maxIter && (squareNorm = CalcNorm(r) / normPr) >= eps; index++)
             {
@@ -333,8 +333,7 @@ namespace nMethods_3
             LU();
 
             r = DirectT(MultT(ReverseT(Direct(pr - Mult(x)))));
-
-            z = r;
+            Array.Copy(r.vec, z.vec, n);
 
             for (index = 0; index < maxIter && (squareNorm = CalcNorm(r) / normPr) >= eps; index++)
             {
@@ -362,7 +361,7 @@ namespace nMethods_3
 
             r = MultDi(MultT(MultDi(MultDi(pr - Mult(x)))));
 
-            z = r;
+            Array.Copy(r.vec, z.vec, n);
 
             for (index = 0; index < maxIter && (squareNorm = CalcNorm(r) / normPr) >= eps; index++)
             {
