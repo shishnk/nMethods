@@ -145,7 +145,7 @@ namespace nMethods_2
             for (uint i = 0; i < n; i++)
                 product[i] -= f[i];
 
-            conditioningNumber = (CalcNorm(dif) / Math.Sqrt(385)) / (CalcNorm(product) / normF);
+            conditioningNumber = (CalcNorm(dif) / (5 * Math.Sqrt(26))) / (CalcNorm(product) / normF);
         }
 
         private void Jacobi(real w) // Method Jacobi
