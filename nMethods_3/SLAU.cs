@@ -14,19 +14,19 @@ namespace nMethods_3
         private real eps; // точность решения
         private real squareNorm; // квадрат норм (для условия выхода)
         private real normPr; // норма вектора правой части
-        private Vector<uint> ig; // указатели начала строк
-        private Vector<uint> jg; // номера столбцов внедиагональных элементов
-        private Vector<real> ggl; // элементы нижнего треугольника
-        private Vector<real> ggu; // элементы верхнего треугольника
-        private Vector<real> di; // диагональные элементы
-        private Vector<real> gglnew; // элементы нижнего при разложении LU
-        private Vector<real> ggunew; // элементы верхнего при разложении LU
-        private Vector<real> dinew; // диагональные элементы при разложении LU
-        private Vector<real> pr; // вектор правой части
-        private Vector<real> r; // вектор невязки
-        private Vector<real> z; // вектор спуска (сопряженное направление)
-        private Vector<real> p; // вспомогательный вектор
-        private Vector<real> x; // вектор начального приближения
+        private uint[] ig; // указатели начала строк
+        private uint[] jg; // номера столбцов внедиагональных элементов
+        private Vector ggl; // элементы нижнего треугольника
+        private Vector ggu; // элементы верхнего треугольника
+        private Vector di; // диагональные элементы
+        private Vector gglnew; // элементы нижнего при разложении LU
+        private Vector ggunew; // элементы верхнего при разложении LU
+        private Vector dinew; // диагональные элементы при разложении LU
+        private Vector pr; // вектор правой части
+        private Vector r; // вектор невязки
+        private Vector z; // вектор спуска (сопряженное направление)
+        private Vector p; // вспомогательный вектор
+        private Vector x; // вектор начального приближения
 
         public SLAU(string pathParametrs, string pathRows, string pathColumns, string pathLower,
                     string pathUpper, string pathDiag, string pathVector)
@@ -42,57 +42,55 @@ namespace nMethods_3
 
                 using (var sr = new StreamReader(pathRows))
                 {
-                    ig = new Vector<uint>(n);
-                    ig.vec = sr.ReadLine().Split(" ").Select(value => uint.Parse(value)).ToArray();
+                    ig = sr.ReadToEnd().Split("\n").Select(value => uint.Parse(value)).ToArray();
                 }
 
                 using (var sr = new StreamReader(pathColumns))
                 {
-                    jg = new Vector<uint>(n);
-                    jg.vec = sr.ReadLine().Split(" ").Select(value => uint.Parse(value)).ToArray();
+                    jg = sr.ReadToEnd().Split("\n").Select(value => uint.Parse(value)).ToArray();
                 }
 
                 using (var sr = new StreamReader(pathLower))
                 {
-                    ggl = new Vector<real>(n);
-                    ggl.vec = sr.ReadLine().Split(" ").Select(value => real.Parse(value)).ToArray();
+                    ggl = new Vector(n);
+                    ggl.vec = sr.ReadToEnd().Split("\n").Select(value => real.Parse(value)).ToArray();
                 }
 
                 using (var sr = new StreamReader(pathUpper))
                 {
-                    ggu = new Vector<real>(n);
-                    ggu.vec = sr.ReadLine().Split(" ").Select(value => real.Parse(value)).ToArray();
+                    ggu = new Vector(n);
+                    ggu.vec = sr.ReadToEnd().Split("\n").Select(value => real.Parse(value)).ToArray();
                 }
 
                 using (var sr = new StreamReader(pathDiag))
                 {
-                    di = new Vector<real>(n);
-                    di.vec = sr.ReadLine().Split(" ").Select(value => real.Parse(value)).ToArray();
+                    di = new Vector(n);
+                    di.vec = sr.ReadToEnd().Split("\n").Select(value => real.Parse(value)).ToArray();
                 }
 
                 using (var sr = new StreamReader(pathVector))
                 {
-                    pr = new Vector<real>(n);
-                    pr.vec = sr.ReadLine().Split(" ").Select(value => real.Parse(value)).ToArray();
+                    pr = new Vector(n);
+                    pr.vec = sr.ReadToEnd().Split("\n").Select(value => real.Parse(value)).ToArray();
                 }
 
-                x = new Vector<real>(n);
-                r = new Vector<real>(n);
-                z = new Vector<real>(n);
-                p = new Vector<real>(n);
-                gglnew = new Vector<real>((uint)ggl.vec.Length);
-                ggunew = new Vector<real>((uint)ggu.vec.Length);
-                dinew = new Vector<real>(n);
+                x = new Vector(n);
+                r = new Vector(n);
+                z = new Vector(n);
+                p = new Vector(n);
+                gglnew = new Vector((uint)ggl.vec.Length);
+                ggunew = new Vector((uint)ggu.vec.Length);
+                dinew = new Vector(n);
 
                 Copy(); // копирование элементов для разложения LU, LL^T
                 normPr = CalcNorm(pr);
 
                 // используем декремент для прохождения с 0
-                for (uint i = 0; i < ig.vec.Length; i++)
-                    ig.vec[i]--;
+                for (uint i = 0; i < ig.Length; i++)
+                    ig[i]--;
 
-                for (uint i = 0; i < jg.vec.Length; i++)
-                    jg.vec[i]--;
+                for (uint i = 0; i < jg.Length; i++)
+                    jg[i]--;
             }
             catch (Exception ex)
             {
@@ -100,47 +98,47 @@ namespace nMethods_3
             }
         }
 
-        private Vector<real> Mult(Vector<real> vector)
+        private Vector Mult(Vector vector)
         {
-            Vector<real> product = new Vector<real>(n);
+            Vector product = new Vector(n);
 
             for (uint i = 0; i < n; i++)
             {
                 product.vec[i] = di.vec[i] * vector.vec[i];
 
-                for (uint j = ig.vec[i]; j < ig.vec[i + 1]; j++)
+                for (uint j = ig[i]; j < ig[i + 1]; j++)
                 {
-                    product.vec[i] += ggl.vec[j] * vector.vec[jg.vec[j]];
-                    product.vec[jg.vec[j]] += ggu.vec[j] * vector.vec[i];
+                    product.vec[i] += ggl.vec[j] * vector.vec[jg[j]];
+                    product.vec[jg[j]] += ggu.vec[j] * vector.vec[i];
                 }
             }
 
             return product;
         }
 
-        private Vector<real> MultT(Vector<real> vector)
+        private Vector MultT(Vector vector)
         {
-            Vector<real> product = new Vector<real>(n);
+            Vector product = new Vector(n);
 
             for (uint i = 0; i < n; i++)
             {
                 product.vec[i] = di.vec[i] * vector.vec[i];
 
-                for (uint j = ig.vec[i]; j < ig.vec[i + 1]; j++)
+                for (uint j = ig[i]; j < ig[i + 1]; j++)
                 {
-                    product.vec[i] += ggu.vec[j] * vector.vec[jg.vec[j]];
-                    product.vec[jg.vec[j]] += ggl.vec[j] * vector.vec[i];
+                    product.vec[i] += ggu.vec[j] * vector.vec[jg[j]];
+                    product.vec[jg[j]] += ggl.vec[j] * vector.vec[i];
                 }
             }
 
             return product;
         }
 
-        private Vector<real> MultDi(Vector<real> vector) // умножение матрицы на вектор 
+        private Vector MultDi(Vector vector) // умножение матрицы на вектор 
                                                          // при диагональном предобуславливании,
                                                          // сразу применен ход для решения СЛАУ
         {
-            Vector<real> product = new Vector<real>(n);
+            Vector product = new Vector(n);
 
             for (uint i = 0; i < n; i++)
                 product.vec[i] = 1 / Math.Sqrt(di.vec[i]) * vector.vec[i];
@@ -153,7 +151,7 @@ namespace nMethods_3
             uint index;
             real alpha, beta;
 
-            Vector<real> tmp = new Vector<real>(n);
+            Vector tmp = new Vector(n);
 
             r = pr - Mult(x);
 
@@ -184,7 +182,7 @@ namespace nMethods_3
             uint index;
             real alpha, beta;
 
-            Vector<real> tmp = new Vector<real>(n);
+            Vector tmp = new Vector(n);
 
             LU();
 
@@ -216,7 +214,7 @@ namespace nMethods_3
             uint index;
             real alpha, beta;
 
-            Vector<real> tmp = new Vector<real>(n);
+            Vector tmp = new Vector(n);
 
             r = MultDi(pr - Mult(x));
             z = MultDi(r);
@@ -247,7 +245,7 @@ namespace nMethods_3
             real alpha, beta;
             real tmp;
 
-            Vector<real> temp = new Vector<real>(n);
+            Vector temp = new Vector(n);
 
             r = pr - Mult(x);
             Array.Copy(r.vec, z.vec, n);
@@ -272,8 +270,8 @@ namespace nMethods_3
             real alpha, beta;
             real tmp;
 
-            Vector<real> fstTemp = new Vector<real>(n);
-            Vector<real> sndTemp = new Vector<real>(n);
+            Vector fstTemp = new Vector(n);
+            Vector sndTemp = new Vector(n);
 
             r = pr - Mult(x);
             z = MultDi(r);
@@ -299,8 +297,8 @@ namespace nMethods_3
             real alpha, beta;
             real tmp;
 
-            Vector<real> fstTemp = new Vector<real>(n);
-            Vector<real> sndTemp = new Vector<real>(n);
+            Vector fstTemp = new Vector(n);
+            Vector sndTemp = new Vector(n);
 
             Cholesky();
 
@@ -328,7 +326,7 @@ namespace nMethods_3
             real alpha, beta;
             real tmp;
 
-            Vector<real> temp = new Vector<real>(n);
+            Vector temp = new Vector(n);
 
             LU();
 
@@ -357,7 +355,7 @@ namespace nMethods_3
             real alpha, beta;
             real tmp;
 
-            Vector<real> temp = new Vector<real>(n);
+            Vector temp = new Vector(n);
 
             r = MultDi(MultT(MultDi(MultDi(pr - Mult(x)))));
 
@@ -379,7 +377,7 @@ namespace nMethods_3
             x = MultDi(x);
         }
 
-        private real CalcNorm(Vector<real> vector)
+        private real CalcNorm(Vector vector)
         {
             real result = 0;
 
@@ -396,20 +394,20 @@ namespace nMethods_3
 
             for (uint i = 0; i < n; i++)
             {
-                uint i0 = ig.vec[i];
-                uint i1 = ig.vec[i + 1];
+                uint i0 = ig[i];
+                uint i1 = ig[i + 1];
 
                 for (uint k = i0; k < i1; k++)
                 {
-                    uint j = jg.vec[k];
-                    uint j0 = ig.vec[j];
-                    uint j1 = ig.vec[j + 1];
+                    uint j = jg[k];
+                    uint j0 = ig[j];
+                    uint j1 = ig[j + 1];
                     uint ik = i0;
                     uint kj = j0;
 
                     while (ik < k && kj < j1)
                     {
-                        if (jg.vec[ik] == jg.vec[kj])
+                        if (jg[ik] == jg[kj])
                         {
                             suml += gglnew.vec[ik] * gglnew.vec[kj];
                             ik++;
@@ -417,7 +415,7 @@ namespace nMethods_3
                         }
                         else
                         {
-                            if (jg.vec[ik] > jg.vec[kj])
+                            if (jg[ik] > jg[kj])
                                 kj++;
                             else
                                 ik++;
@@ -442,20 +440,20 @@ namespace nMethods_3
 
             for (uint i = 0; i < n; i++)
             {
-                uint i0 = ig.vec[i];
-                uint i1 = ig.vec[i + 1];
+                uint i0 = ig[i];
+                uint i1 = ig[i + 1];
 
                 for (uint k = i0; k < i1; k++)
                 {
-                    uint j = jg.vec[k];
-                    uint j0 = ig.vec[j];
-                    uint j1 = ig.vec[j + 1];
+                    uint j = jg[k];
+                    uint j0 = ig[j];
+                    uint j1 = ig[j + 1];
                     uint ik = i0;
                     uint kj = j0;
 
                     while (ik < k && kj < j1)
                     {
-                        if (jg.vec[ik] == jg.vec[kj])
+                        if (jg[ik] == jg[kj])
                         {
                             suml += gglnew.vec[ik] * ggunew.vec[kj];
                             sumu += ggunew.vec[ik] * gglnew.vec[kj];
@@ -464,7 +462,7 @@ namespace nMethods_3
                         }
                         else
                         {
-                            if (jg.vec[ik] > jg.vec[kj])
+                            if (jg[ik] > jg[kj])
                                 kj++;
                             else
                                 ik++;
@@ -483,9 +481,9 @@ namespace nMethods_3
             }
         }
 
-        private Vector<real> DirectT(Vector<real> vector) // U^-T
+        private Vector DirectT(Vector vector) // U^-T
         {
-            Vector<real> result = new Vector<real>(n);
+            Vector result = new Vector(n);
 
             Array.Copy(vector.vec, result.vec, n);
 
@@ -493,11 +491,11 @@ namespace nMethods_3
 
             for (uint i = 0; i < n; i++)
             {
-                uint i0 = ig.vec[i];
-                uint i1 = ig.vec[i + 1];
+                uint i0 = ig[i];
+                uint i1 = ig[i + 1];
 
                 for (uint k = i0; k < i1; k++)
-                    sum += result.vec[jg.vec[k]] * ggunew.vec[k];
+                    sum += result.vec[jg[k]] * ggunew.vec[k];
 
                 result.vec[i] -= sum;
                 sum = 0;
@@ -506,30 +504,30 @@ namespace nMethods_3
             return result;
         }
 
-        private Vector<real> ReverseT(Vector<real> vector) // L^-T
+        private Vector ReverseT(Vector vector) // L^-T
         {
-            Vector<real> result = new Vector<real>(n);
+            Vector result = new Vector(n);
 
             Array.Copy(vector.vec, result.vec, n);
 
             for (int i = (int)n - 1; i >= 0; i--)
             {
-                uint i0 = ig.vec[i];
-                uint i1 = ig.vec[i + 1];
+                uint i0 = ig[i];
+                uint i1 = ig[i + 1];
                 result.vec[i] /= dinew.vec[i];
 
                 for (uint k = i0; k < i1; k++)
-                    result.vec[jg.vec[k]] -= gglnew.vec[k] * result.vec[i];
+                    result.vec[jg[k]] -= gglnew.vec[k] * result.vec[i];
             }
 
             return result;
         }
 
-        private Vector<real> MoveForCholesky(Vector<real> vector)
+        private Vector MoveForCholesky(Vector vector)
         {
 
-            Vector<real> y = new Vector<real>(n);
-            Vector<real> x = new Vector<real>(n);
+            Vector y = new Vector(n);
+            Vector x = new Vector(n);
 
             Array.Copy(vector.vec, y.vec, n);
 
@@ -537,11 +535,11 @@ namespace nMethods_3
 
             for (uint i = 0; i < n; i++) // Прямой ход
             {
-                uint i0 = ig.vec[i];
-                uint i1 = ig.vec[i + 1];
+                uint i0 = ig[i];
+                uint i1 = ig[i + 1];
 
                 for (uint k = i0; k < i1; k++)
-                    sum += gglnew.vec[k] * y.vec[jg.vec[k]];
+                    sum += gglnew.vec[k] * y.vec[jg[k]];
 
                 y.vec[i] = (y.vec[i] - sum) / dinew.vec[i];
                 sum = 0;
@@ -551,20 +549,20 @@ namespace nMethods_3
 
             for (int i = (int)n - 1; i >= 0; i--) // Обратный ход
             {
-                uint i0 = ig.vec[i];
-                uint i1 = ig.vec[i + 1];
+                uint i0 = ig[i];
+                uint i1 = ig[i + 1];
                 x.vec[i] = y.vec[i] / dinew.vec[i];
 
                 for (uint k = i0; k < i1; k++)
-                    y.vec[jg.vec[k]] -= gglnew.vec[k] * x.vec[i];
+                    y.vec[jg[k]] -= gglnew.vec[k] * x.vec[i];
             }
 
             return x;
         }
 
-        private Vector<real> Direct(Vector<real> vector)
+        private Vector Direct(Vector vector)
         {
-            Vector<real> y = new Vector<real>(n);
+            Vector y = new Vector(n);
 
             Array.Copy(vector.vec, y.vec, n);
 
@@ -572,11 +570,11 @@ namespace nMethods_3
 
             for (uint i = 0; i < n; i++)
             {
-                uint i0 = ig.vec[i];
-                uint i1 = ig.vec[i + 1];
+                uint i0 = ig[i];
+                uint i1 = ig[i + 1];
 
                 for (uint k = i0; k < i1; k++)
-                    sum += gglnew.vec[k] * y.vec[jg.vec[k]];
+                    sum += gglnew.vec[k] * y.vec[jg[k]];
 
                 y.vec[i] = (y.vec[i] - sum) / dinew.vec[i];
                 sum = 0;
@@ -585,19 +583,19 @@ namespace nMethods_3
             return y;
         }
 
-        private Vector<real> Reverse(Vector<real> vector)
+        private Vector Reverse(Vector vector)
         {
-            Vector<real> result = new Vector<real>(n);
+            Vector result = new Vector(n);
 
             Array.Copy(vector.vec, result.vec, n);
 
             for (int i = (int)n - 1; i >= 0; i--)
             {
-                uint i0 = ig.vec[i];
-                uint i1 = ig.vec[i + 1];
+                uint i0 = ig[i];
+                uint i1 = ig[i + 1];
 
                 for (uint k = i0; k < i1; k++)
-                    result.vec[jg.vec[k]] -= ggunew.vec[k] * result.vec[i];
+                    result.vec[jg[k]] -= ggunew.vec[k] * result.vec[i];
             }
 
             return result;
@@ -607,10 +605,10 @@ namespace nMethods_3
         {
             using (var sw = new StreamWriter(path, true))
             {
-                sw.WriteLine($"Method: {str}\n\n iterations: {countIter}, residual: {squareNorm.ToString("0.00E+0")}, time(mcs): {time}\n");
+                sw.WriteLine($"Method: {str}\n\n iterations: {countIter}, residual: {squareNorm.ToString("0.00E+0")}, time(ms): {time}\n");
 
-                for (uint i = 0; i < n; i++)
-                    sw.WriteLine(x.vec[i]);
+                // for (uint i = 0; i < n; i++)
+                //     sw.WriteLine(x.vec[i]);
 
                 sw.WriteLine("---------------------------------------------------");
             }
@@ -626,19 +624,19 @@ namespace nMethods_3
 
         private void Resize()
         {
-            Array.Resize<uint>(ref ig.vec, (int)n + 1);
-            Array.Resize<uint>(ref jg.vec, (int)(n * (n - 1) / 2));
-            Array.Resize<real>(ref di.vec, (int)n);
-            Array.Resize<real>(ref ggl.vec, (int)(n * (n - 1) / 2));
-            Array.Resize<real>(ref ggu.vec, (int)(n * (n - 1) / 2));
-            Array.Resize<real>(ref pr.vec, (int)n);
-            Array.Resize<real>(ref dinew.vec, (int)n);
-            Array.Resize<real>(ref gglnew.vec, (int)(n * (n - 1) / 2));
-            Array.Resize<real>(ref ggunew.vec, (int)(n * (n - 1) / 2));
-            Array.Resize<real>(ref r.vec, (int)n);
-            Array.Resize<real>(ref z.vec, (int)n);
-            Array.Resize<real>(ref p.vec, (int)n);
-            Array.Resize<real>(ref x.vec, (int)n);
+            Array.Resize(ref ig, (int)n + 1);
+            Array.Resize(ref jg, (int)(n * (n - 1) / 2));
+            Array.Resize(ref di.vec, (int)n);
+            Array.Resize(ref ggl.vec, (int)(n * (n - 1) / 2));
+            Array.Resize(ref ggu.vec, (int)(n * (n - 1) / 2));
+            Array.Resize(ref pr.vec, (int)n);
+            Array.Resize(ref dinew.vec, (int)n);
+            Array.Resize(ref gglnew.vec, (int)(n * (n - 1) / 2));
+            Array.Resize(ref ggunew.vec, (int)(n * (n - 1) / 2));
+            Array.Resize(ref r.vec, (int)n);
+            Array.Resize(ref z.vec, (int)n);
+            Array.Resize(ref p.vec, (int)n);
+            Array.Resize(ref x.vec, (int)n);
         }
 
         private void Copy()
@@ -651,21 +649,21 @@ namespace nMethods_3
         public void GenMatrixHilbert(uint dim)
         {
             n = dim;
-            ig.vec[0] = 0;
+            ig[0] = 0;
 
             Resize();
 
             for (uint i = 0; i < dim; i++)
             {
                 di.vec[i] = 1.0 / (2 * (i + 1) - 1);
-                ig.vec[i + 1] = ig.vec[i] + i;
+                ig[i + 1] = ig[i] + i;
             }
 
             for (uint i = 0; i < dim; i++)
             {
                 real sum = 0;
-                uint i0 = ig.vec[i];
-                uint i1 = ig.vec[i + 1];
+                uint i0 = ig[i];
+                uint i1 = ig[i + 1];
                 uint j = i - (i1 - i0);
 
                 for (uint k = i0; k < i1; k++, j++)
@@ -673,7 +671,7 @@ namespace nMethods_3
                     sum = 1.0 / (i + 1 + j + 1 - 1);
                     ggl.vec[k] = sum;
                     ggu.vec[k] = sum;
-                    jg.vec[k] = j;
+                    jg[k] = j;
                 }
             }
 
