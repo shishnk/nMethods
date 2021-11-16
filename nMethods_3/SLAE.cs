@@ -6,7 +6,7 @@ using real = System.Double;
 
 namespace nMethods_3
 {
-    class SLAU
+    class SLAE
     {
         private uint n; // размерность матрицы
         private uint maxIter; // максимальное кол-во итераций
@@ -28,7 +28,7 @@ namespace nMethods_3
         private Vector p; // вспомогательный вектор
         private Vector x; // вектор начального приближения
 
-        public SLAU(string pathParametrs, string pathRows, string pathColumns, string pathLower,
+        public SLAE(string pathParametrs, string pathRows, string pathColumns, string pathLower,
                     string pathUpper, string pathDiag, string pathVector)
         {   // чтение всех данных
             try

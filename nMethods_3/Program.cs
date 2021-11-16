@@ -7,7 +7,7 @@ namespace nMethods_3
     {
         static void Main(string[] args)
         {
-            SLAU slau = new SLAU("kuslau.txt", "ig.txt", "jg.txt", "ggl.txt",
+            SLAE slau = new SLAE("kuslau.txt", "ig.txt", "jg.txt", "ggl.txt",
                                  "ggu.txt", "di.txt", "pr.txt");
 
             var watch = new Stopwatch();
