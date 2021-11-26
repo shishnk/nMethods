@@ -1,12 +1,5 @@
-﻿namespace nMethods_4
-{
-    class Program
-    {
-        public static void Main(string[] args)
-        {
-            SNE sne = new("parametrs.txt");
-            sne.MethodNewton();
-            sne.WriteToFile("x.txt");
-        }
-    }
-}
+﻿using nMethods_4;
+
+SNE sne = new("parametrs.txt", Test.firstTest);
+sne.MethodNewton();
+sne.WriteToFile("x.txt");
