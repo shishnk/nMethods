@@ -7,8 +7,8 @@ public enum Test
     firstTest,  // две окружности, которые не пересекаются
     secondTest, // две окружности, которые пересекаются в одной точке
     thirdTest,  // две окружности, которые пересекаются в двух точках
-    fourthTest, // три попарно пересекающиеся прямые
-    fifthTest,  // исследование влияния взвешивания уравнений СНУ  
+    fourthTest, // две окружности, которые пересекаются в двух точках + уравнение прямой
+    fifthTest,  // три попарно пересекающиеся прямые
     sixthTest   // прямая, которая пересекает синусоиду 
 }
 
@@ -28,6 +28,10 @@ public class SNE
     private Test _test; // номер теста
     private real h; // шаг для численного дифференцирования
 
+    // буфер для метода симметризации
+    private real[,] temp;
+    private real[] tempF;
+
     public SNE(string path, Test test)
     {
         try
@@ -40,12 +44,14 @@ public class SNE
                 sndEps = real.Parse(sr.ReadLine());
                 maxIter = real.Parse(sr.ReadLine());
 
-                x = new Vector(2);
+                x = new Vector(m);
                 x.vec = sr.ReadLine().Split(" ").
                         Select(value => real.Parse(value)).ToArray();
             }
 
             A = new real[n, n];
+            temp = new real[n, n];
+            tempF = new real[n];
             f = new(m);
             delta = new(m);
             _test = test;
@@ -103,68 +109,6 @@ public class SNE
         return Math.Sqrt(result);
     }
 
-    private real ValueAtPoint(uint numberFunc, real hx, real hy)
-    {
-        // switch (_test)
-        // {
-        //     case Test.firstTest:
-        return numberFunc switch
-        {
-            0 => (x.vec[0] + hx + 3) * (x.vec[0] + hx + 3) +
-                 (x.vec[1] + hy) * (x.vec[1] + hy) - 8,
-
-            1 => (x.vec[0] + hx - 2) * (x.vec[0] + hx - 2) +
-                 (x.vec[1] + hy) * (x.vec[1] + hy) - 8,
-
-            _ => throw new Exception("Invalid number")
-        };
-
-        // case Test.secondTest:
-        //     return numberFunc switch
-        //     {
-        //         0 => // TODO
-        //     };
-        // }
-    }
-
-    private real Differentiation(uint numberFunc, uint numberVariable)
-    {
-        switch (_test)
-        {
-            case Test.firstTest:
-
-                switch (numberFunc)
-                {
-                    case 0:
-                        return numberVariable switch
-                        {
-                            0 => (ValueAtPoint(numberFunc, h, 0) -
-                                 ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
-
-                            1 => (ValueAtPoint(numberFunc, 0, h) -
-                                 ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
-
-                            _ => throw new Exception("Invalid number")
-                        };
-
-                    case 1:
-                        return numberVariable switch
-                        {
-                            0 => (ValueAtPoint(numberFunc, h, 0) -
-                                 ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
-
-                            1 => (ValueAtPoint(numberFunc, 0, h) -
-                                 ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
-
-                            _ => throw new Exception("Invalid number")
-                        };
-                }
-
-                break;
-        }
-        return 0; // TODO
-    }
-
     public void MethodNewton()
     {
         uint index;
@@ -194,6 +138,21 @@ public class SNE
             CalcAnalyticElementsJacobi();
             currentNorm = CalcNorm(f.vec);
         }
+    }
+
+    private void SymmetryсMethod()
+    {
+        for (uint i = 0; i < n; i++)
+            for (uint j = 0; j < m; j++)
+                tempF[i] += A[j, i] * f.vec[j];
+
+        for (uint i = 0; i < n; i++)
+            for (uint j = 0; j < n; j++)
+                for (uint k = 0; k < m; k++)
+                    temp[i, j] += A[k, i] * A[k, j];
+
+        Array.Copy(temp, A, n);
+        Array.Copy(tempF, f.vec, n);
     }
 
     private void MethodGauss()
@@ -263,5 +222,67 @@ public class SNE
             for (uint i = 0; i < x.vec.Length; i++)
                 sw.WriteLine(x.vec[i]);
         }
+    }
+
+    private real ValueAtPoint(uint numberFunc, real hx, real hy)
+    {
+        // switch (_test)
+        // {
+        //     case Test.firstTest:
+        return numberFunc switch
+        {
+            0 => (x.vec[0] + hx + 3) * (x.vec[0] + hx + 3) +
+                 (x.vec[1] + hy) * (x.vec[1] + hy) - 8,
+
+            1 => (x.vec[0] + hx - 2) * (x.vec[0] + hx - 2) +
+                 (x.vec[1] + hy) * (x.vec[1] + hy) - 8,
+
+            _ => throw new Exception("Invalid number")
+        };
+
+        // case Test.secondTest:
+        //     return numberFunc switch
+        //     {
+        //         0 => // TODO
+        //     };
+        // }
+    }
+
+    private real Differentiation(uint numberFunc, uint numberVariable)
+    {
+        switch (_test)
+        {
+            case Test.firstTest:
+
+                switch (numberFunc)
+                {
+                    case 0:
+                        return numberVariable switch
+                        {
+                            0 => (ValueAtPoint(numberFunc, h, 0) -
+                                 ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
+
+                            1 => (ValueAtPoint(numberFunc, 0, h) -
+                                 ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
+
+                            _ => throw new Exception("Invalid number")
+                        };
+
+                    case 1:
+                        return numberVariable switch
+                        {
+                            0 => (ValueAtPoint(numberFunc, h, 0) -
+                                 ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
+
+                            1 => (ValueAtPoint(numberFunc, 0, h) -
+                                 ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
+
+                            _ => throw new Exception("Invalid number")
+                        };
+                }
+
+                break;
+        }
+        return 0; // TODO
     }
 }
