@@ -12,6 +12,12 @@ public enum Test
     sixthTest   // прямая, которая пересекает синусоиду 
 }
 
+public enum Derivative
+{
+    Analytic,
+    Numerical
+}
+
 public class SNE
 {
     private real fstEps; // точность решения СНУ (для беты)
@@ -26,13 +32,14 @@ public class SNE
     private Vector delta; // x* - xk (x* - искомое решение)
     private real[,] A; // матрица Якоби
     private Test _test; // номер теста
+    private Derivative _derivative; // метод подсчета производных
     private real h; // шаг для численного дифференцирования
 
     // буфер для метода симметризации
     private real[,] temp;
     private real[] tempF;
 
-    public SNE(string path, Test test)
+    public SNE(string path, Test test, Derivative derivative)
     {
         try
         { // считывание и инициализация данных
@@ -49,12 +56,14 @@ public class SNE
                         Select(value => real.Parse(value)).ToArray();
             }
 
-            A = new real[n, n];
+            A = new real[m, n];
             temp = new real[n, n];
             tempF = new real[n];
             f = new(m);
             delta = new(m);
+
             _test = test;
+            _derivative = derivative;
             h = 1E-12;
         }
         catch (Exception ex)
@@ -65,6 +74,8 @@ public class SNE
 
     private void CalcAnalyticElementsJacobi()
     {
+        A = ResizeArray(A, m, n);
+
         switch (_test)
         {
             case Test.firstTest:
@@ -73,30 +84,61 @@ public class SNE
                 A[1, 0] = 2 * (x.vec[0] - 2);
                 A[1, 1] = 2 * x.vec[1];
                 break;
+
+            case Test.secondTest:
+                A[0, 0] = 2 * (x.vec[0] + 3);
+                A[0, 1] = 2 * x.vec[1];
+                A[1, 0] = 2 * (x.vec[0] - 1);
+                A[1, 1] = 2 * x.vec[1];
+                break;
+
+            case Test.thirdTest:
+                A[0, 0] = 2 * x.vec[0];
+                A[0, 1] = 2 * (x.vec[1] + 2);
+                A[1, 0] = 2 * x.vec[0];
+                A[1, 1] = 2 * (x.vec[1] - 1);
+                break;
+
+            case Test.fourthTest:
+                A[0, 0] = 2 * x.vec[0];
+                A[0, 1] = 2 * (x.vec[1] + 2);
+                A[1, 0] = 2 * x.vec[0];
+                A[1, 1] = 2 * (x.vec[1] - 1);
+                A[2, 0] = 1;
+                A[2, 1] = -1;
+                break;
+
+            // case Test.fifthTest:
+            //     A[0, 0] = ;
+            //     A[0, 1] = ;
+            //     A[1, 0] = ;
+            //     A[1, 1] = ;
+            //     break;
+
+            // case Test.sixthTest:
+            //     A[0, 0] = ;
+            //     A[0, 1] = ;
+            //     A[1, 0] = ;
+            //     A[1, 1] = ;
+            //     break;
+
+            default:
+                throw new ArgumentException(message: "Invalid enum value",
+                                            paramName: nameof(_test));
         }
     }
 
     private void CalcNumericalElementsJacobi()
     {
-        switch (_test)
-        {
-            case Test.firstTest:
-                for (uint i = 0; i < n; i++)
-                    for (uint j = 0; j < n; j++)
-                        A[i, j] = Differentiation(i, j);
-                break;
-        }
+        for (uint i = 0; i < m; i++)
+            for (uint j = 0; j < n; j++)
+                A[i, j] = Differentiation(i, j);
     }
 
     private void CalcElementsF()
     {
-        switch (_test)
-        {
-            case Test.firstTest:
-                for (uint i = 0; i < m; i++)
-                    f.vec[i] = ValueAtPoint(i, 0, 0);
-                break;
-        }
+        for (uint i = 0; i < m; i++)
+            f.vec[i] = ValueAtPoint(i, 0, 0);
     }
 
     private real CalcNorm(real[] vector)
@@ -119,14 +161,16 @@ public class SNE
         primaryNorm = CalcNorm(f.vec);
         currentNorm = previousNorm = CalcNorm(f.vec);
 
-        for (index = 0; index < maxIter && (currentNorm / primaryNorm) >= sndEps; index++)
+        for (index = 0; index < maxIter &&
+        (currentNorm / primaryNorm) >= sndEps; index++)
         {
             previousNorm = CalcNorm(f.vec);
 
             f = -f;
             beta = 1;
 
-            CalcNumericalElementsJacobi();
+            CalcAnalyticElementsJacobi();
+            SymmetryсMethod();
             MethodGauss();
 
             for (uint v = 0; beta >= fstEps; v++)
@@ -155,7 +199,8 @@ public class SNE
                 for (uint k = 0; k < m; k++)
                     temp[i, j] += A[k, i] * A[k, j];
 
-        Array.Copy(temp, A, n);
+        A = ResizeArray(A, n, n);
+        Copy();
         Array.Copy(tempF, f.vec, n);
     }
 
@@ -230,63 +275,132 @@ public class SNE
 
     private real ValueAtPoint(uint numberFunc, real hx, real hy)
     {
-        // switch (_test)
-        // {
-        //     case Test.firstTest:
-        return numberFunc switch
+        return _test switch
         {
-            0 => (x.vec[0] + hx + 3) * (x.vec[0] + hx + 3) +
-                 (x.vec[1] + hy) * (x.vec[1] + hy) - 8,
+            Test.firstTest => numberFunc switch
+            {
+                0 => (x.vec[0] + hx + 3) * (x.vec[0] + hx + 3) +
+                     (x.vec[1] + hy) * (x.vec[1] + hy) - 8,
 
-            1 => (x.vec[0] + hx - 2) * (x.vec[0] + hx - 2) +
-                 (x.vec[1] + hy) * (x.vec[1] + hy) - 8,
+                1 => (x.vec[0] + hx - 2) * (x.vec[0] + hx - 2) +
+                     (x.vec[1] + hy) * (x.vec[1] + hy) - 8,
 
-            _ => throw new Exception("Invalid number")
+                _ => throw new ArgumentException(message: "Invalid number function",
+                                                 paramName: nameof(numberFunc))
+            },
+
+            Test.secondTest => numberFunc switch
+            {
+                0 => (x.vec[0] + hx + 3) * (x.vec[0] + hx + 3) +
+                     (x.vec[1] + hy) * (x.vec[1] + hy) - 4,
+
+                1 => (x.vec[0] + hx - 1) * (x.vec[0] + hx - 1) +
+                     (x.vec[1] + hy) * (x.vec[1] + hy) - 4,
+
+                _ => throw new ArgumentException(message: "Invalid number function",
+                                                 paramName: nameof(numberFunc))
+            },
+
+            Test.thirdTest => numberFunc switch
+            {
+                0 => (x.vec[0] + hx) * (x.vec[0] + hx) +
+                     (x.vec[1] + hy + 2) * (x.vec[1] + hy + 2) - 4,
+
+                1 => (x.vec[0] + hx) * (x.vec[0] + hx) +
+                     (x.vec[1] + hy - 1) * (x.vec[1] + hy - 1) - 4,
+
+                _ => throw new ArgumentException(message: "Invalid number function",
+                                                 paramName: nameof(numberFunc))
+            },
+
+            Test.fourthTest => numberFunc switch
+            {
+                0 => (x.vec[0] + hx) * (x.vec[0] + hx) +
+                     (x.vec[1] + hy + 2) * (x.vec[1] + hy + 2) - 4,
+
+                1 => (x.vec[0] + hx) * (x.vec[0] + hx) +
+                     (x.vec[1] + hy - 1) * (x.vec[1] + hy - 1) - 4,
+
+                2 => (x.vec[0] + hx) - (x.vec[1] + hy),
+
+                _ => throw new ArgumentException(message: "Invalid number function",
+                                                 paramName: nameof(numberFunc))
+            },
+
+            Test.fifthTest => numberFunc switch
+            {
+                _ => throw new ArgumentException(message: "Invalid number function",
+                                                 paramName: nameof(numberFunc))
+            },
+
+            Test.sixthTest => numberFunc switch
+            {
+                _ => throw new ArgumentException(message: "Invalid number function",
+                                                 paramName: nameof(numberFunc))
+            },
+
+            _ => throw new ArgumentException(message: "Invalid enum value",
+                                             paramName: nameof(_test))
         };
 
-        // case Test.secondTest:
-        //     return numberFunc switch
-        //     {
-        //         0 => // TODO
-        //     };
-        // }
     }
 
     private real Differentiation(uint numberFunc, uint numberVariable)
     {
-        switch (_test)
+        return numberFunc switch
         {
-            case Test.firstTest:
+            0 => numberVariable switch
+            {
+                0 => (ValueAtPoint(numberFunc, h, 0) -
+                     ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
 
-                switch (numberFunc)
-                {
-                    case 0:
-                        return numberVariable switch
-                        {
-                            0 => (ValueAtPoint(numberFunc, h, 0) -
-                                 ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
+                1 => (ValueAtPoint(numberFunc, 0, h) -
+                     ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
 
-                            1 => (ValueAtPoint(numberFunc, 0, h) -
-                                 ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
+                2 => (ValueAtPoint(numberFunc, 0, h) -
+                     ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
 
-                            _ => throw new Exception("Invalid number")
-                        };
+                _ => throw new ArgumentException(message: "Invalid number variable",
+                                                 paramName: nameof(numberVariable))
+            },
 
-                    case 1:
-                        return numberVariable switch
-                        {
-                            0 => (ValueAtPoint(numberFunc, h, 0) -
-                                 ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
+            1 => numberVariable switch
+            {
+                0 => (ValueAtPoint(numberFunc, h, 0) -
+                     ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
 
-                            1 => (ValueAtPoint(numberFunc, 0, h) -
-                                 ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
+                1 => (ValueAtPoint(numberFunc, 0, h) -
+                     ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
 
-                            _ => throw new Exception("Invalid number")
-                        };
-                }
+                2 => (ValueAtPoint(numberFunc, 0, h) -
+                     ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
 
-                break;
-        }
-        return 0; // TODO
+                _ => throw new ArgumentException(message: "Invalid number variable",
+                                                 paramName: nameof(numberVariable))
+            },
+
+            _ => throw new ArgumentException(message: "Invalid number function",
+                                             paramName: nameof(numberFunc))
+        };
+    }
+
+    private real[,] ResizeArray(real[,] original, int rows, int cols)
+    {
+        real[,] newArray = new real[rows, cols];
+        int minRows = Math.Min(rows, original.GetLength(0));
+        int minCols = Math.Min(cols, original.GetLength(1));
+
+        for (int i = 0; i < minRows; i++)
+            for (int j = 0; j < minCols; j++)
+                newArray[i, j] = original[i, j];
+
+        return newArray;
+    }
+
+    private void Copy()
+    {
+        for (uint i = 0; i < n; i++)
+            for (uint j = 0; j < n; j++)
+                A[i, j] = temp[i,j];
     }
 }
