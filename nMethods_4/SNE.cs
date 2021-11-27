@@ -93,7 +93,7 @@ public class SNE
         switch (_test)
         {
             case Test.firstTest:
-                for (uint i = 0; i < 2; i++)
+                for (uint i = 0; i < m; i++)
                     f.vec[i] = ValueAtPoint(i, 0, 0);
                 break;
         }
@@ -114,29 +114,33 @@ public class SNE
         uint index;
         real currentNorm;
         real previousNorm;
-        beta = 1;
 
-        CalcAnalyticElementsJacobi();
         CalcElementsF();
         primaryNorm = CalcNorm(f.vec);
         currentNorm = previousNorm = CalcNorm(f.vec);
 
-        for (index = 0; index < maxIter && beta >= fstEps &&
-            (CalcNorm(f.vec) / primaryNorm) >= sndEps; index++)
+        for (index = 0; index < maxIter && (currentNorm / primaryNorm) >= sndEps; index++)
         {
-            f = -f;
+            previousNorm = CalcNorm(f.vec);
 
+            f = -f;
+            beta = 1;
+
+            CalcNumericalElementsJacobi();
             MethodGauss();
 
-            if (currentNorm > previousNorm)
-                beta /= 2;
+            for (uint v = 0; beta >= fstEps; v++)
+            {
+                x = x + beta * delta;
 
-            x = x + beta * delta;
+                CalcElementsF();
+                currentNorm = CalcNorm(f.vec);
 
-            previousNorm = CalcNorm(f.vec);
-            CalcElementsF();
-            CalcAnalyticElementsJacobi();
-            currentNorm = CalcNorm(f.vec);
+                if (currentNorm > previousNorm)
+                    beta /= 2;
+                else
+                    break;
+            }
         }
     }
 
@@ -187,7 +191,7 @@ public class SNE
                 real temp = A[i, k];
 
                 if (Math.Abs(temp) < eps)
-                    throw new Exception("Нулевой элемент столбца");
+                    throw new Exception("Zero element of the column");
 
                 for (uint j = 0; j < n; j++)
                     A[i, j] /= temp;
