@@ -18,10 +18,18 @@ public enum Derivative // метод подсчета производных
     Numerical
 }
 
+public enum ToSquareMatrix // метод преобразования к квадратной матрице
+{
+    Symmetrization,
+    Convolution
+}
+
 public class SNE
 {
     private delegate void CalcElementsJacobi();
+    private delegate void Transformation();
     CalcElementsJacobi calcElementsJacobi;
+    Transformation transformation;
 
     private real fstEps; // точность решения СНУ (для беты)
     private real sndEps; // точность решения СНУ (для частного норм)
@@ -36,13 +44,15 @@ public class SNE
     private real[,] A; // матрица Якоби
     private Test _test; // номер теста
     private Derivative _derivative; // метод подсчета производных
+    private ToSquareMatrix _methodTransformation; // метод преобразования к квадратной матрице
     private real h; // шаг для численного дифференцирования
 
-    // буфер для метода симметризации
+    // буфер для метода симметризации и свертки
     private real[,] temp;
     private real[] tempF;
+    List<Tuple<int, real>> equations;
 
-    public SNE(string path, Test test, Derivative derivative)
+    public SNE(string path, Test test, Derivative derivative, ToSquareMatrix methodTransformation)
     {
         try
         { // считывание и инициализация данных
@@ -50,6 +60,10 @@ public class SNE
             {
                 m = int.Parse(sr.ReadLine());
                 n = int.Parse(sr.ReadLine());
+
+                if (m < n)
+                    throw new Exception("Unable to solve SNE");
+
                 fstEps = real.Parse(sr.ReadLine());
                 sndEps = real.Parse(sr.ReadLine());
                 maxIter = real.Parse(sr.ReadLine());
@@ -64,18 +78,42 @@ public class SNE
             tempF = new real[n];
             f = new(m);
             delta = new(m);
+            equations = new();
 
             _test = test;
             _derivative = derivative;
+            _methodTransformation = methodTransformation;
             h = 1E-12;
 
-            if (_derivative == Derivative.Analytic)
-                calcElementsJacobi = CalcAnalyticElementsJacobi;
-            else if (_derivative == Derivative.Numerical)
-                calcElementsJacobi = CalcNumericalElementsJacobi;
-            else
-                throw new ArgumentException(message: "Invalid derivative calculation method",
-                                            paramName: nameof(_derivative));
+            switch (_derivative)
+            {
+                case Derivative.Analytic:
+                    calcElementsJacobi = CalcAnalyticElementsJacobi;
+                    break;
+
+                case Derivative.Numerical:
+                    calcElementsJacobi = CalcNumericalElementsJacobi;
+                    break;
+
+                default:
+                    throw new ArgumentException(message: "Invalid derivative calculation method",
+                                                paramName: nameof(_derivative));
+            }
+
+            switch (_methodTransformation)
+            {
+                case ToSquareMatrix.Symmetrization:
+                    transformation = SymmetrizationMethod;
+                    break;
+
+                case ToSquareMatrix.Convolution:
+                    transformation = ConvolutionProcedure;
+                    break;
+
+                default:
+                    throw new ArgumentException(message: "Invalid matrix transformation method",
+                                                paramName: nameof(_methodTransformation));
+            }
         }
         catch (Exception ex)
         {
@@ -146,14 +184,14 @@ public class SNE
         if (m > n)
             A = ResizeArray(A, m, n);
 
-        for (uint i = 0; i < m; i++)
-            for (uint j = 0; j < n; j++)
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
                 A[i, j] = Differentiation(i, j);
     }
 
     private void CalcElementsF()
     {
-        for (uint i = 0; i < m; i++)
+        for (int i = 0; i < m; i++)
             f.vec[i] = ValueAtPoint(i, 0, 0);
     }
 
@@ -161,7 +199,7 @@ public class SNE
     {
         real result = 0;
 
-        for (uint i = 0; i < vector.Length; i++)
+        for (int i = 0; i < vector.Length; i++)
             result += vector[i] * vector[i];
 
         return Math.Sqrt(result);
@@ -169,7 +207,7 @@ public class SNE
 
     public void MethodNewton()
     {
-        uint index;
+        int index;
         real currentNorm;
         real previousNorm;
 
@@ -188,7 +226,7 @@ public class SNE
             calcElementsJacobi();
 
             if (m > n)
-                SymmetrizationMethod();
+                transformation();
 
             MethodGauss();
 
@@ -206,16 +244,23 @@ public class SNE
             }
         }
     }
+
     private void SymmetrizationMethod()
     {
-        for (uint i = 0; i < n; i++)
-            for (uint j = 0; j < m; j++)
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++)
                 tempF[i] += A[j, i] * f.vec[j];
 
-        for (uint i = 0; i < n; i++)
-            for (uint j = 0; j < n; j++)
-                for (uint k = 0; k < m; k++)
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < m; k++)
                     temp[i, j] += A[k, i] * A[k, j];
+
+        SymmetrizationMethodAddOn();
+    }
+
+    private void SymmetrizationMethodAddOn()
+    {
 
         A = ResizeArray(A, n, n);
         Copy();
@@ -226,17 +271,45 @@ public class SNE
             Array.Clear(temp, i, n);
     }
 
+    private void ConvolutionProcedure()
+    {
+        ConvolutionAddOn();
+
+        for (int i = 0; i < tempF.Length; i++) // массив используется для хранения индексов нужных уравнений
+            tempF[i] = equations[i].Item1;
+
+        for (int i = 0; i < tempF.Length; i++)
+            f.vec[n - 1] += ValueAtPoint((int)tempF[i], 0, 0) * ValueAtPoint((int)tempF[i], 0, 0);
+
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                A[n - 1, i] += 2 * ValueAtPoint((int)tempF[i], 0, 0) * Differentiation((int)tempF[i], j);
+
+        equations.Clear();
+    }
+
+    private void ConvolutionAddOn()
+    {
+        for (int i = 0; i < m; i++)
+            equations.Add(Tuple.Create(i, f.vec[i]));
+
+        equations = equations.OrderBy(x => Math.Abs(x.Item2)).ToList();
+
+        Array.Resize(ref tempF, m - n + 1);
+        A = ResizeArray(A, n, n);
+    }
+
     private void MethodGauss()
     {
         real max;
         real eps = 1E-14;
 
-        for (uint k = 0; k < n; k++)
+        for (int k = 0; k < n; k++)
         {
             max = Math.Abs(A[k, k]);
-            uint index = k;
+            int index = k;
 
-            for (uint i = k + 1; i < n; i++)
+            for (int i = k + 1; i < n; i++)
             {
                 if (Math.Abs(A[i, k]) > max)
                 {
@@ -245,7 +318,7 @@ public class SNE
                 }
             }
 
-            for (uint j = 0; j < n; j++)
+            for (int j = 0; j < n; j++)
             {
                 (A[k, j], A[index, j]) =
                     (A[index, j], A[k, j]);
@@ -253,21 +326,21 @@ public class SNE
 
             (f.vec[k], f.vec[index]) = (f.vec[index], f.vec[k]);
 
-            for (uint i = k; i < n; i++)
+            for (int i = k; i < n; i++)
             {
                 real temp = A[i, k];
 
                 if (Math.Abs(temp) < eps)
                     throw new Exception("Zero element of the column");
 
-                for (uint j = 0; j < n; j++)
+                for (int j = 0; j < n; j++)
                     A[i, j] /= temp;
 
                 f.vec[i] /= temp;
 
                 if (i != k)
                 {
-                    for (uint j = 0; j < n; j++)
+                    for (int j = 0; j < n; j++)
                     {
                         A[i, j] -= A[k, j];
                     }
@@ -281,7 +354,7 @@ public class SNE
         {
             delta.vec[k] = f.vec[k];
 
-            for (uint i = 0; i < k; i++)
+            for (int i = 0; i < k; i++)
                 f.vec[i] = f.vec[i] - A[i, k] * delta.vec[k];
         }
     }
@@ -290,12 +363,12 @@ public class SNE
     {
         using (var sw = new StreamWriter(path))
         {
-            for (uint i = 0; i < n; i++)
+            for (int i = 0; i < n; i++)
                 sw.WriteLine(x.vec[i]);
         }
     }
 
-    private real ValueAtPoint(uint numberFunc, real hx, real hy)
+    private real ValueAtPoint(int numberFunc, real hx, real hy)
     {
         return _test switch
         {
@@ -376,17 +449,17 @@ public class SNE
         };
     }
 
-    private real Differentiation(uint numberFunc, uint numberVariable)
+    private real Differentiation(int numberFunc, int numberVariable)
     {
         return numberFunc switch
         {
             0 => numberVariable switch
             {
                 0 => (ValueAtPoint(numberFunc, h, 0) -
-                     ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
+                      ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
 
                 1 => (ValueAtPoint(numberFunc, 0, h) -
-                     ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
+                      ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
 
                 _ => throw new ArgumentException(message: "Invalid number variable",
                                                  paramName: nameof(numberVariable))
@@ -395,10 +468,10 @@ public class SNE
             1 => numberVariable switch
             {
                 0 => (ValueAtPoint(numberFunc, h, 0) -
-                     ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
+                      ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
 
                 1 => (ValueAtPoint(numberFunc, 0, h) -
-                     ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
+                      ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
 
                 _ => throw new ArgumentException(message: "Invalid number variable",
                                                  paramName: nameof(numberVariable))
@@ -407,10 +480,10 @@ public class SNE
             2 => numberVariable switch
             {
                 0 => (ValueAtPoint(numberFunc, h, 0) -
-                     ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
+                      ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
 
                 1 => (ValueAtPoint(numberFunc, 0, h) -
-                     ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
+                      ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
 
                 _ => throw new ArgumentException(message: "Invalid number variable",
                                                  paramName: nameof(numberVariable))
@@ -421,6 +494,7 @@ public class SNE
         };
     }
 
+    //  вспомогательные методы 
     private real[,] ResizeArray(real[,] original, int rows, int cols)
     {
         real[,] newArray = new real[rows, cols];
@@ -436,8 +510,8 @@ public class SNE
 
     private void Copy()
     {
-        for (uint i = 0; i < n; i++)
-            for (uint j = 0; j < n; j++)
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
                 A[i, j] = temp[i, j];
     }
 }
