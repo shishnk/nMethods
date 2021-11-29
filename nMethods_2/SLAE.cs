@@ -6,7 +6,7 @@ using real = System.Double;
 
 namespace nMethods_2
 {
-    class SLAU
+    class SLAE
     {
         private uint n; // matrix dimension
         private uint m; // number of zero diagonals
@@ -25,7 +25,7 @@ namespace nMethods_2
         private real[] r; // residual
         private real[] product;
 
-        public SLAU(string pathMatrix, string pathVector, string pathParametrs, string pathXk)
+        public SLAE(string pathMatrix, string pathVector, string pathParametrs, string pathXk)
         {
             try
             {
