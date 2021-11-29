@@ -43,8 +43,6 @@ public class SNE
     private Vector delta; // x* - xk (x* - искомое решение)
     private real[,] A; // матрица Якоби
     private Test _test; // номер теста
-    private Derivative _derivative; // метод подсчета производных
-    private ToSquareMatrix _methodTransformation; // метод преобразования к квадратной матрице
     private real h; // шаг для численного дифференцирования
 
     // буфер для метода симметризации и свертки
@@ -81,11 +79,9 @@ public class SNE
             equations = new();
 
             _test = test;
-            _derivative = derivative;
-            _methodTransformation = methodTransformation;
             h = 1E-12;
 
-            switch (_derivative)
+            switch (derivative)
             {
                 case Derivative.Analytic:
                     calcElementsJacobi = CalcAnalyticElementsJacobi;
@@ -97,22 +93,22 @@ public class SNE
 
                 default:
                     throw new ArgumentException(message: "Invalid derivative calculation method",
-                                                paramName: nameof(_derivative));
+                                                paramName: nameof(derivative));
             }
 
-            switch (_methodTransformation)
+            switch (methodTransformation)
             {
                 case ToSquareMatrix.Symmetrization:
-                    transformation = SymmetrizationMethod;
+                    transformation = Symmetrization;
                     break;
 
                 case ToSquareMatrix.Convolution:
-                    transformation = ConvolutionProcedure;
+                    transformation = Convolution;
                     break;
 
                 default:
                     throw new ArgumentException(message: "Invalid matrix transformation method",
-                                                paramName: nameof(_methodTransformation));
+                                                paramName: nameof(methodTransformation));
             }
         }
         catch (Exception ex)
@@ -245,7 +241,7 @@ public class SNE
         }
     }
 
-    private void SymmetrizationMethod()
+    private void Symmetrization()
     {
         for (int i = 0; i < n; i++)
             for (int j = 0; j < m; j++)
@@ -256,10 +252,10 @@ public class SNE
                 for (int k = 0; k < m; k++)
                     temp[i, j] += A[k, i] * A[k, j];
 
-        SymmetrizationMethodAddOn();
+        SymmetrizationAddOn();
     }
 
-    private void SymmetrizationMethodAddOn()
+    private void SymmetrizationAddOn()
     {
 
         A = ResizeArray(A, n, n);
@@ -271,7 +267,7 @@ public class SNE
             Array.Clear(temp, i, n);
     }
 
-    private void ConvolutionProcedure()
+    private void Convolution()
     {
         ConvolutionAddOn();
 
