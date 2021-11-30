@@ -1,0 +1,2 @@
+Maximum eigenvalue = 15.82 | iterations = 13
+Minimum eigenvalue = -0.82 | iterations = 13
