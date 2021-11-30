@@ -1,7 +1,7 @@
 namespace nMethods_5;
 public class Vector
 {
-    public real[] vec;
+    private real[] vec;
     public int Length { get; init; }
 
     public Vector(int dim)
@@ -10,10 +10,22 @@ public class Vector
         Length = dim;
     }
 
+    public real this[int index]
+    {
+        get => vec[index];
+        set => vec[index] = value;
+    }
+
     public void Randomize()
     {
         for (int i = 0; i < Length; i++)
-            vec[i] = new Random().Next(1,10);
+            vec[i] = new Random().Next(1, 10);
+    }
+
+    public static void Copy(Vector source, Vector destination)
+    {
+        for (int i = 0; i < source.Length; i++)
+            destination[i] = source[i];
     }
 
     public void Norming()
@@ -40,7 +52,7 @@ public class Vector
 
         for (int i = 0; i < vector.Length; i++)
             for (int j = 0; j < vector.Length; j++)
-                result.vec[i] += matrix.A[i, j] * vector.vec[j];
+                result.vec[i] += matrix[i, j] * vector.vec[j];
 
         return result;
     }

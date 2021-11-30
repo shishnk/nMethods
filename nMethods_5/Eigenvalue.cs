@@ -46,7 +46,7 @@ public class Eigenvalue
             minPrev = min;
             min = (nextVector * vector) / (vector * vector);
 
-            Array.Copy(nextVector.vec, vector.vec, nextVector.Length);
+            Vector.Copy(nextVector, vector);
 
             if (Math.Abs(min - minPrev) < eps)
                 break;
@@ -59,22 +59,22 @@ public class Eigenvalue
     private void FindingMaximum()
     {
         int index;
-        real eps = 1E-12;
+        real eps = 1E-122;
         real maxPrev = 0;
 
-        Vector temp = new(vector.Length);
+        Vector nextVector = new(vector.Length);
 
         for (index = 0; ; index++)
         {
-            temp = matrix * vector;
+            nextVector = matrix * vector;
 
             if (index % 10 == 0 && index != 0)
                 vector.Norming();
 
             maxPrev = max;
-            max = (temp * vector) / (vector * vector);
+            max = (nextVector * vector) / (vector * vector);
 
-            Array.Copy(temp.vec, vector.vec, temp.Length);
+            Vector.Copy(nextVector, vector);
 
             if (Math.Abs(max - maxPrev) < eps)
                 break;

@@ -5,16 +5,16 @@ public static class SLAE
     public static Vector Compute(Matrix matrix, Vector f)
     {
         Vector x = new(f.Length);
-        Array.Copy(f.vec, x.vec, f.Length);
+        Vector.Copy(f, x);
 
         for (int i = 0; i < f.Length; i++)
         {
             real sum = 0;
 
             for (int k = 0; k < i; k++)
-                sum += matrix.A[i, k] * x.vec[k];
+                sum += matrix[i, k] * x[k];
 
-            x.vec[i] = (f.vec[i] - sum) / matrix.A[i, i];
+            x[i] = (f[i] - sum) / matrix[i, i];
         }
 
         for (int i = x.Length - 1; i >= 0; i--)
@@ -22,9 +22,9 @@ public static class SLAE
             real sum = 0;
 
             for (int k = i + 1; k < x.Length; k++)
-                sum += matrix.A[i, k] * x.vec[k];
+                sum += matrix[i, k] * x[k];
 
-            x.vec[i] -= sum;
+            x[i] -= sum;
         }
 
         return x;

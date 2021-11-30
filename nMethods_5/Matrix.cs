@@ -3,7 +3,7 @@ global using real = System.Double;
 namespace nMethods_5;
 public class Matrix
 {
-    public real[,] A;
+    private real[,] A;
     public int Size { get; init; }
 
     public Matrix(string path)
@@ -38,6 +38,12 @@ public class Matrix
         {
             Console.WriteLine(ex.Message);
         }
+    }
+
+    public real this[int i, int j]
+    {
+        get => A[i, j];
+        set => A[i, j] = value;
     }
 
     public void LU()
