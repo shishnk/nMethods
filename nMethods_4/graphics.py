@@ -16,32 +16,10 @@ def firstTest():  # две окружности, которые не перес�
 
     figure, axes = plt.subplots(1)
 
-    axes.plot(x1, y1, label='F1', linewidth=2, color="g")
-    axes.plot(x2, y2, label='F2', linewidth=2, color="m")
+    axes.plot(x1, y1, label='F1', linewidth=2, color='g')
+    axes.plot(x2, y2, label='F2', linewidth=2, color='y')
 
     axes.legend()
-
-    plt.xlim([-7, 6])
-    plt.ylim([-4, 4])
-
-    axes.xaxis.set_major_locator(ticker.MultipleLocator(1))
-    axes.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-    axes.yaxis.set_major_locator(ticker.MultipleLocator(1))
-    axes.yaxis.set_minor_locator(ticker.MultipleLocator(1))
-
-    plt.xlabel("x")
-    plt.ylabel("y")
-
-    x = []
-    y = []
-
-    with open("coords.txt") as file:
-        for line in file:
-            xC, yC = line.split()
-            x.append((float)(xC))
-            y.append((float)(yC))
-
-    plt.plot(x, y, 'o', markersize=3.5)
 
     mesh1 = np.arange(-5, 4.1, 0.1)
     mesh2 = np.arange(-3, 3.1, 0.1)
@@ -51,11 +29,7 @@ def firstTest():  # две окружности, которые не перес�
 
     contourf_ = axes.contourf(meshX, meshY, z, levels=12)
 
-    figure.colorbar(contourf_, shrink=0.93)
-
-    plt.grid()
-    axes.set_aspect(1)
-    plt.show()
+    return angle, x1, y1, x2, y2, axes, figure, mesh1, mesh2, meshX, meshY, z, contourf_
 
 
 def secondTest():  # две окружности, которые пересекаются в одной точке
@@ -71,33 +45,6 @@ def secondTest():  # две окружности, которые пересек�
 
     figure, axes = plt.subplots(1)
 
-    axes.plot(x1, y1, label='F1', linewidth=2, color="g")
-    axes.plot(x2, y2, label='F2', linewidth=2, color="m")
-
-    axes.legend()
-
-    plt.xlim([-7, 6])
-    plt.ylim([-4, 4])
-
-    axes.xaxis.set_major_locator(ticker.MultipleLocator(1))
-    axes.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-    axes.yaxis.set_major_locator(ticker.MultipleLocator(1))
-    axes.yaxis.set_minor_locator(ticker.MultipleLocator(1))
-
-    plt.xlabel("x")
-    plt.ylabel("y")
-
-    x = []
-    y = []
-
-    with open("coords.txt") as file:
-        for line in file:
-            xC, yC = line.split()
-            x.append((float)(xC))
-            y.append((float)(yC))
-
-    plt.plot(x, y, 'o', markersize=3.5)
-
     mesh1 = np.arange(-5, 3.1, 0.1)
     mesh2 = np.arange(-3, 3.1, 0.1)
     meshX, meshY = np.meshgrid(mesh1, mesh2)
@@ -106,11 +53,7 @@ def secondTest():  # две окружности, которые пересек�
 
     contourf_ = axes.contourf(meshX, meshY, z, levels=12)
 
-    figure.colorbar(contourf_, shrink=0.93)
-
-    plt.grid()
-    axes.set_aspect(1)
-    plt.show()
+    return angle, x1, y1, x2, y2, axes, figure, mesh1, mesh2, meshX, meshY, z, contourf_
 
 
 def thirdTest():  # две окружности, которые пересекаются в двух точках
@@ -126,22 +69,18 @@ def thirdTest():  # две окружности, которые пересека
 
     figure, axes = plt.subplots(1)
 
-    axes.plot(x1, y1, label='F1', linewidth=2, color="g")
-    axes.plot(x2, y2, label='F2', linewidth=2, color="m")
+    mesh1 = np.arange(-3, 3.1, 0.1)
+    mesh2 = np.arange(-4, 3.1, 0.1)
+    meshX, meshY = np.meshgrid(mesh1, mesh2)
 
-    axes.legend()
+    z = (meshX)**2 + (meshY + 2)**2 - 4 + (meshX)**2 + (meshY - 1)**2 - 4
 
-    plt.xlim([-7, 6])
-    plt.ylim([-4, 4])
+    contourf_ = axes.contourf(meshX, meshY, z, levels=12)
 
-    axes.xaxis.set_major_locator(ticker.MultipleLocator(1))
-    axes.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-    axes.yaxis.set_major_locator(ticker.MultipleLocator(1))
-    axes.yaxis.set_minor_locator(ticker.MultipleLocator(1))
+    return angle, x1, y1, x2, y2, axes, figure, meshX, meshY, z, contourf_
 
-    plt.xlabel("x")
-    plt.ylabel("y")
 
+def main():
     x = []
     y = []
 
@@ -151,31 +90,44 @@ def thirdTest():  # две окружности, которые пересека
             x.append((float)(xC))
             y.append((float)(yC))
 
-    plt.plot(x, y, 'o', markersize=3.5)
+    # angle, x1, y1, x2, y2, axes, figure, mesh1, mesh2, meshX, meshY, z, contourf_ = firstTest()
 
-    mesh1 = np.arange(-3, 3.1, 0.1)
-    mesh2 = np.arange(-4, 3.1, 0.1)
-    meshX, meshY = np.meshgrid(mesh1, mesh2)
+    # angle, x1, y1, x2, y2, axes, figure, mesh1, mesh2, meshX, meshY, z, contourf_ = secondTest()
 
-    z = (meshX)**2 + (meshY + 2)**2 - 4 + (meshX)**2 + (meshY - 1)**2 - 4
+    angle, x1, y1, x2, y2, axes, figure, meshX, meshY, z, contourf_ = thirdTest()
 
-    contourf_ = axes.contourf(meshX, meshY, z, levels=12)
+    # fourthTest()
+
+    # fifthTest()
+
+    # sixthTest()
+
+    axes.plot(x1, y1, label='F1', linewidth=2, color='g')
+    axes.plot(x2, y2, label='F2', linewidth=2, color='y')
+
+    axes.legend()
+
+    plt.xlim(-7, 6)
+    plt.ylim(-5, 4)
+
+    axes.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    axes.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+    axes.yaxis.set_major_locator(ticker.MultipleLocator(1))
+    axes.yaxis.set_minor_locator(ticker.MultipleLocator(1))
+
+    plt.xlabel("x")
+    plt.ylabel("y")
+
+    plt.plot(x, y, '-o', markersize=6, color='c')
+    plt.plot(x[-1], y[-1], 'o', markersize=9, color='r')
+
+    axes.contourf(meshX, meshY, z, levels=12)
 
     figure.colorbar(contourf_, shrink=0.93)
 
     plt.grid()
     axes.set_aspect(1)
     plt.show()
-
-
-def main():
-    # firstTest()
-    # secondTest()
-    thirdTest()
-    # fourthTest()
-    # fifthTest()
-    # sixthTest()
-
 
 if __name__ == "__main__":
     main()
