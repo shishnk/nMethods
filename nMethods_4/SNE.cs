@@ -46,9 +46,8 @@ public class SNE
     private real h; // шаг для численного дифференцирования
 
     // буфер для метода симметризации и свертки
-    private real[,] temp;
-    private real[] tempF;
-    List<Tuple<int, real>> equations;
+    private real[,] tempA;
+    private Vector tempF;
 
     public SNE(string path, Test test, Derivative derivative, ToSquareMatrix methodTransformation)
     {
@@ -66,17 +65,22 @@ public class SNE
                 sndEps = real.Parse(sr.ReadLine());
                 maxIter = real.Parse(sr.ReadLine());
 
-                x = new Vector(m);
+                x = new(n);
                 x.vec = sr.ReadLine().Split(" ").
                         Select(value => real.Parse(value)).ToArray();
+
+                using (var sw = new StreamWriter("coords.txt"))
+                {
+                    sw.Write(x[0] + " " + x[1]);
+                    sw.WriteLine();
+                }
             }
 
             A = new real[m, n];
-            temp = new real[n, n];
-            tempF = new real[n];
+            tempA = new real[n, n];
+            tempF = new(n);
             f = new(m);
             delta = new(m);
-            equations = new();
 
             _test = test;
             h = 1E-12;
@@ -122,32 +126,32 @@ public class SNE
         switch (_test)
         {
             case Test.firstTest:
-                A[0, 0] = 2 * (x.vec[0] + 3);
-                A[0, 1] = 2 * x.vec[1];
-                A[1, 0] = 2 * (x.vec[0] - 2);
-                A[1, 1] = 2 * x.vec[1];
+                A[0, 0] = 2 * (x[0] + 3);
+                A[0, 1] = 2 * x[1];
+                A[1, 0] = 2 * (x[0] - 2);
+                A[1, 1] = 2 * x[1];
                 break;
 
             case Test.secondTest:
-                A[0, 0] = 2 * (x.vec[0] + 3);
-                A[0, 1] = 2 * x.vec[1];
-                A[1, 0] = 2 * (x.vec[0] - 1);
-                A[1, 1] = 2 * x.vec[1];
+                A[0, 0] = 2 * (x[0] + 3);
+                A[0, 1] = 2 * x[1];
+                A[1, 0] = 2 * (x[0] - 1);
+                A[1, 1] = 2 * x[1];
                 break;
 
             case Test.thirdTest:
-                A[0, 0] = 2 * x.vec[0];
-                A[0, 1] = 2 * (x.vec[1] + 2);
-                A[1, 0] = 2 * x.vec[0];
-                A[1, 1] = 2 * (x.vec[1] - 1);
+                A[0, 0] = 2 * x[0];
+                A[0, 1] = 2 * (x[1] + 2);
+                A[1, 0] = 2 * x[0];
+                A[1, 1] = 2 * (x[1] - 1);
                 break;
 
             case Test.fourthTest:
                 A = ResizeArray(A, m, n);
-                A[0, 0] = 2 * x.vec[0];
-                A[0, 1] = 2 * (x.vec[1] + 2);
-                A[1, 0] = 2 * x.vec[0];
-                A[1, 1] = 2 * (x.vec[1] - 1);
+                A[0, 0] = 2 * x[0];
+                A[0, 1] = 2 * (x[1] + 2);
+                A[1, 0] = 2 * x[0];
+                A[1, 1] = 2 * (x[1] - 1);
                 A[2, 0] = 500.0 / 441;
                 A[2, 1] = -1;
                 break;
@@ -163,7 +167,7 @@ public class SNE
                 break;
 
             case Test.sixthTest:
-                A[0, 0] = -8 * Math.Sin(2 * x.vec[0] - 1);
+                A[0, 0] = 8 * Math.Cos(2 * x[0] + 1);
                 A[0, 1] = -1;
                 A[1, 0] = 1;
                 A[1, 1] = -1;
@@ -188,10 +192,10 @@ public class SNE
     private void CalcElementsF()
     {
         for (int i = 0; i < m; i++)
-            f.vec[i] = ValueAtPoint(i, 0, 0);
+            f[i] = ValueAtPoint(i, 0, 0);
     }
 
-    private real CalcNorm(real[] vector)
+    private real CalcNorm(Vector vector)
     {
         real result = 0;
 
@@ -208,21 +212,22 @@ public class SNE
         real previousNorm;
 
         CalcElementsF();
-        primaryNorm = CalcNorm(f.vec);
-        currentNorm = previousNorm = CalcNorm(f.vec);
+        primaryNorm = CalcNorm(f);
+        currentNorm = previousNorm = CalcNorm(f);
 
         for (index = 0; index < maxIter &&
         (currentNorm / primaryNorm) >= sndEps; index++)
         {
-            previousNorm = CalcNorm(f.vec);
+            previousNorm = CalcNorm(f);
 
-            f = -f;
             beta = 1;
 
             calcElementsJacobi();
 
             if (m > n)
                 transformation();
+
+            f = -f;
 
             MethodGauss();
 
@@ -231,12 +236,18 @@ public class SNE
                 x = x + beta * delta;
 
                 CalcElementsF();
-                currentNorm = CalcNorm(f.vec);
+                currentNorm = CalcNorm(f);
 
                 if (currentNorm > previousNorm)
                     beta /= 2;
                 else
                     break;
+            }
+
+            using (var sw = new StreamWriter("coords.txt", true))
+            {
+                sw.Write(x[0] + " " + x[1]);
+                sw.WriteLine();
             }
         }
     }
@@ -245,54 +256,72 @@ public class SNE
     {
         for (int i = 0; i < n; i++)
             for (int j = 0; j < m; j++)
-                tempF[i] += A[j, i] * f.vec[j];
+                tempF[i] += A[j, i] * f[j];
 
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
                 for (int k = 0; k < m; k++)
-                    temp[i, j] += A[k, i] * A[k, j];
+                    tempA[i, j] += A[k, i] * A[k, j];
 
         SymmetrizationAddOn();
     }
 
     private void SymmetrizationAddOn()
     {
-
         A = ResizeArray(A, n, n);
         Copy();
-        Array.Copy(tempF, f.vec, n);
-        Array.Clear(tempF, 0, n);
+        Vector.Copy(tempF, f);
+        Vector.Clear(tempF);
 
         for (int i = 0; i <= n; i++)
-            Array.Clear(temp, i, n);
+            Array.Clear(tempA, i, n);
     }
 
     private void Convolution()
     {
-        ConvolutionAddOn();
+        real sumF = 0;
+        int numberExcluded = m - n + 1;
+        int mutableRow;
 
-        for (int i = 0; i < tempF.Length; i++) // массив используется для хранения индексов нужных уравнений
-            tempF[i] = equations[i].Item1;
+        for (int i = 0; i < numberExcluded; i++)
+        {
+            mutableRow = 0;
+            real min = Math.Abs(f[0]);
 
-        for (int i = 0; i < tempF.Length; i++)
-            f.vec[n - 1] += ValueAtPoint((int)tempF[i], 0, 0) * ValueAtPoint((int)tempF[i], 0, 0);
+            for (int j = 0; j < m - i; j++)
+            {
+                if (Math.Abs(f[j]) < min)
+                {
+                    min = Math.Abs(f[j]);
+                    mutableRow = j;
+                }
+            }
 
-        for (int i = 0; i < n; i++)
+            sumF += f[mutableRow] * f[mutableRow]; // значение новой функции
+
             for (int j = 0; j < n; j++)
-                A[n - 1, i] += 2 * ValueAtPoint((int)tempF[i], 0, 0) * Differentiation((int)tempF[i], j);
+                tempF[j] += 2 * f[mutableRow] * A[mutableRow, j]; // значение производной новой функции
 
-        equations.Clear();
+            (f[mutableRow], f[m - i - 1]) =
+            (f[m - i - 1], f[mutableRow]);
+
+            for (int j = 0; j < n; j++)
+                (A[mutableRow, j], A[m - i - 1, j]) =
+                (A[m - i - 1, j], A[mutableRow, j]);
+        }
+
+        f[n - 1] = sumF;
+
+        for (int j = 0; j < n; j++)
+            A[n - 1, j] = tempF[j];
+
+        ConvolutionAddOn();
     }
 
     private void ConvolutionAddOn()
     {
-        for (int i = 0; i < m; i++)
-            equations.Add(Tuple.Create(i, f.vec[i]));
-
-        equations = equations.OrderBy(x => Math.Abs(x.Item2)).ToList();
-
-        Array.Resize(ref tempF, m - n + 1);
         A = ResizeArray(A, n, n);
+        Vector.Clear(tempF);
     }
 
     private void MethodGauss()
@@ -320,7 +349,7 @@ public class SNE
                     (A[index, j], A[k, j]);
             }
 
-            (f.vec[k], f.vec[index]) = (f.vec[index], f.vec[k]);
+            (f[k], f[index]) = (f[index], f[k]);
 
             for (int i = k; i < n; i++)
             {
@@ -332,26 +361,24 @@ public class SNE
                 for (int j = 0; j < n; j++)
                     A[i, j] /= temp;
 
-                f.vec[i] /= temp;
+                f[i] /= temp;
 
                 if (i != k)
                 {
                     for (int j = 0; j < n; j++)
-                    {
                         A[i, j] -= A[k, j];
-                    }
 
-                    f.vec[i] -= f.vec[k];
+                    f[i] -= f[k];
                 }
             }
         }
 
         for (int k = n - 1; k >= 0; k--)
         {
-            delta.vec[k] = f.vec[k];
+            delta[k] = f[k];
 
             for (int i = 0; i < k; i++)
-                f.vec[i] = f.vec[i] - A[i, k] * delta.vec[k];
+                f[i] = f[i] - A[i, k] * delta[k];
         }
     }
 
@@ -360,7 +387,7 @@ public class SNE
         using (var sw = new StreamWriter(path))
         {
             for (int i = 0; i < n; i++)
-                sw.WriteLine(x.vec[i]);
+                sw.WriteLine(x[i]);
         }
     }
 
@@ -370,11 +397,11 @@ public class SNE
         {
             Test.firstTest => numberFunc switch
             {
-                0 => (x.vec[0] + hx + 3) * (x.vec[0] + hx + 3) +
-                     (x.vec[1] + hy) * (x.vec[1] + hy) - 8,
+                0 => (x[0] + hx + 3) * (x[0] + hx + 3) +
+                     (x[1] + hy) * (x[1] + hy) - 4,
 
-                1 => (x.vec[0] + hx - 2) * (x.vec[0] + hx - 2) +
-                     (x.vec[1] + hy) * (x.vec[1] + hy) - 8,
+                1 => (x[0] + hx - 2) * (x[0] + hx - 2) +
+                     (x[1] + hy) * (x[1] + hy) - 4,
 
                 _ => throw new ArgumentException(message: "Invalid number function",
                                                  paramName: nameof(numberFunc))
@@ -382,11 +409,11 @@ public class SNE
 
             Test.secondTest => numberFunc switch
             {
-                0 => (x.vec[0] + hx + 3) * (x.vec[0] + hx + 3) +
-                     (x.vec[1] + hy) * (x.vec[1] + hy) - 4,
+                0 => (x[0] + hx + 3) * (x[0] + hx + 3) +
+                     (x[1] + hy) * (x[1] + hy) - 4,
 
-                1 => (x.vec[0] + hx - 1) * (x.vec[0] + hx - 1) +
-                     (x.vec[1] + hy) * (x.vec[1] + hy) - 4,
+                1 => (x[0] + hx - 1) * (x[0] + hx - 1) +
+                     (x[1] + hy) * (x[1] + hy) - 4,
 
                 _ => throw new ArgumentException(message: "Invalid number function",
                                                  paramName: nameof(numberFunc))
@@ -394,11 +421,11 @@ public class SNE
 
             Test.thirdTest => numberFunc switch
             {
-                0 => (x.vec[0] + hx) * (x.vec[0] + hx) +
-                     (x.vec[1] + hy + 2) * (x.vec[1] + hy + 2) - 4,
+                0 => (x[0] + hx) * (x[0] + hx) +
+                     (x[1] + hy + 2) * (x[1] + hy + 2) - 4,
 
-                1 => (x.vec[0] + hx) * (x.vec[0] + hx) +
-                     (x.vec[1] + hy - 1) * (x.vec[1] + hy - 1) - 4,
+                1 => (x[0] + hx) * (x[0] + hx) +
+                     (x[1] + hy - 1) * (x[1] + hy - 1) - 4,
 
                 _ => throw new ArgumentException(message: "Invalid number function",
                                                  paramName: nameof(numberFunc))
@@ -406,13 +433,13 @@ public class SNE
 
             Test.fourthTest => numberFunc switch
             {
-                0 => (x.vec[0] + hx) * (x.vec[0] + hx) +
-                     (x.vec[1] + hy + 2) * (x.vec[1] + hy + 2) - 4,
+                0 => (x[0] + hx) * (x[0] + hx) +
+                     (x[1] + hy + 2) * (x[1] + hy + 2) - 4,
 
-                1 => (x.vec[0] + hx) * (x.vec[0] + hx) +
-                     (x.vec[1] + hy - 1) * (x.vec[1] + hy - 1) - 4,
+                1 => (x[0] + hx) * (x[0] + hx) +
+                     (x[1] + hy - 1) * (x[1] + hy - 1) - 4,
 
-                2 => (500.0 / 441 * x.vec[0] + hx) - (x.vec[1] + hy),
+                2 => 500.0 / 441 * (x[0] + hx) + 1 - (x[1] + hy),
 
                 _ => throw new ArgumentException(message: "Invalid number function",
                                                  paramName: nameof(numberFunc))
@@ -420,11 +447,11 @@ public class SNE
 
             Test.fifthTest => numberFunc switch
             {
-                0 => (x.vec[0] + hx) + 1 - (x.vec[1] + hy),
+                0 => (x[0] + hx) + 1 - (x[1] + hy),
 
-                1 => (0.1 * x.vec[0] + hx) - (x.vec[1] + hy),
+                1 => 0.1 * (x[0] + hx) - (x[1] + hy),
 
-                2 => (-x.vec[0] + hx) + 2 - (x.vec[1] + hy),
+                2 => -(x[0] + hx) + 2 - (x[1] + hy),
 
                 _ => throw new ArgumentException(message: "Invalid number function",
                                                  paramName: nameof(numberFunc))
@@ -432,9 +459,9 @@ public class SNE
 
             Test.sixthTest => numberFunc switch
             {
-                0 => 2 + 4 * Math.Cos(2 * x.vec[0] + hx + 1) - (x.vec[1] + hy),
+                0 => 2 + 4 * Math.Sin(2 * (x[0] + hx) + 1) - (x[1] + hy),
 
-                1 => (x.vec[0] + hx) - (x.vec[1] + hy),
+                1 => (x[0] + hx) - (x[1] + hy),
 
                 _ => throw new ArgumentException(message: "Invalid number function",
                                                  paramName: nameof(numberFunc))
@@ -508,6 +535,6 @@ public class SNE
     {
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
-                A[i, j] = temp[i, j];
+                A[i, j] = tempA[i, j];
     }
 }
