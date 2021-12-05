@@ -479,10 +479,10 @@ public class SNE
             0 => numberVariable switch
             {
                 0 => (ValueAtPoint(numberFunc, h, 0) -
-                      ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
+                      ValueAtPoint(numberFunc, 0, 0)) / h,
 
                 1 => (ValueAtPoint(numberFunc, 0, h) -
-                      ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
+                      ValueAtPoint(numberFunc, 0, 0)) / h,
 
                 _ => throw new ArgumentException(message: "Invalid number variable",
                                                  paramName: nameof(numberVariable))
@@ -491,10 +491,10 @@ public class SNE
             1 => numberVariable switch
             {
                 0 => (ValueAtPoint(numberFunc, h, 0) -
-                      ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
+                      ValueAtPoint(numberFunc, 0, 0)) / h,
 
                 1 => (ValueAtPoint(numberFunc, 0, h) -
-                      ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
+                      ValueAtPoint(numberFunc, 0, 0)) / h,
 
                 _ => throw new ArgumentException(message: "Invalid number variable",
                                                  paramName: nameof(numberVariable))
@@ -503,10 +503,10 @@ public class SNE
             2 => numberVariable switch
             {
                 0 => (ValueAtPoint(numberFunc, h, 0) -
-                      ValueAtPoint(numberFunc, -h, 0)) / (2 * h),
+                      ValueAtPoint(numberFunc, 0, 0)) / h,
 
                 1 => (ValueAtPoint(numberFunc, 0, h) -
-                      ValueAtPoint(numberFunc, 0, -h)) / (2 * h),
+                      ValueAtPoint(numberFunc, 0, 0)) / h,
 
                 _ => throw new ArgumentException(message: "Invalid number variable",
                                                  paramName: nameof(numberVariable))
