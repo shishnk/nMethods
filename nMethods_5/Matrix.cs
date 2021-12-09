@@ -1,6 +1,7 @@
 global using real = System.Double;
 
 namespace nMethods_5;
+
 public class Matrix
 {
     private real[][] A;
@@ -31,7 +32,6 @@ public class Matrix
     public void LU()
     {
         for (int i = 0; i < Size; i++)
-        {
             for (int j = 0; j < Size; j++)
             {
                 real suml = 0;
@@ -52,6 +52,5 @@ public class Matrix
                     A[i][j] -= suml;
                 }
             }
-        }
     }
 }

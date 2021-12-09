@@ -64,12 +64,12 @@ public class Eigenvalue
 
         Vector nextVector = new(vector.Length);
 
-        for (index = 0; ; index++)
+        for (index = 0; index < maxIters; index++)
         {
             nextVector = matrix * vector;
 
             if (index % 10 == 0 && index != 0)
-                vector.Norming();
+                nextVector.Norming();
 
             maxPrev = max;
             max = (nextVector * vector) / (vector * vector);
