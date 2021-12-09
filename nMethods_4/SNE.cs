@@ -80,7 +80,7 @@ public class SNE
             tempA = new real[n, n];
             tempF = new(n);
             f = new(m);
-            delta = new(m);
+            delta = new(n);
 
             _test = test;
             h = 1E-12;
@@ -215,7 +215,7 @@ public class SNE
         primaryNorm = CalcNorm(f);
         currentNorm = previousNorm = CalcNorm(f);
 
-        for (index = 0; index < maxIter &&
+        for (index = 1; index < maxIter &&
         (currentNorm / primaryNorm) >= sndEps; index++)
         {
             previousNorm = CalcNorm(f);
@@ -231,7 +231,7 @@ public class SNE
 
             MethodGauss();
 
-            while (beta >= fstEps)
+            do
             {
                 x = x + beta * delta;
 
@@ -242,7 +242,8 @@ public class SNE
                     beta /= 2;
                 else
                     break;
-            }
+
+            } while (beta > fstEps);
 
             using (var sw = new StreamWriter("coords.txt", true))
             {
