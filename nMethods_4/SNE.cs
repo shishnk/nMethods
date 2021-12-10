@@ -9,7 +9,8 @@ public enum Test
     thirdTest,  // две окружности, которые пересекаются в двух точках
     fourthTest, // две окружности, которые пересекаются в двух точках + уравнение прямой
     fifthTest,  // три попарно пересекающиеся прямые
-    sixthTest   // прямая, которая пересекает синусоиду 
+    sixthTest, // прямая, которая пересекает синусоиду 
+    seventhTest // тест для беты
 }
 
 public enum Derivative // метод подсчета производных
@@ -39,6 +40,7 @@ public class SNE
     private int m;  // кол-во уравнений
     private real primaryNorm; // начальная норма вектора правой части
     private Vector x; // начальное приближение
+    private Vector tempX;
     private Vector f; // вектор правой части
     private Vector delta; // x* - xk (x* - искомое решение)
     private real[,] A; // матрица Якоби
@@ -81,6 +83,7 @@ public class SNE
             tempF = new(n);
             f = new(m);
             delta = new(n);
+            tempX = new (n);
 
             _test = test;
             h = 1E-12;
@@ -173,6 +176,13 @@ public class SNE
                 A[1, 1] = -1;
                 break;
 
+            case Test.seventhTest:
+                A[0, 0] = 2 * x[0];
+                A[0, 1] = 2 * x[1];
+                A[1, 0] = 2 * (x[0] - 3);
+                A[1, 1] = 2 * (x[1] - 2);
+                break;
+
             default:
                 throw new ArgumentException(message: "Invalid enum value",
                                             paramName: nameof(_test));
@@ -205,7 +215,7 @@ public class SNE
         return Math.Sqrt(result);
     }
 
-    public void MethodNewton()
+    public void MethodNewton(string path)
     {
         int index;
         real currentNorm;
@@ -231,9 +241,11 @@ public class SNE
 
             MethodGauss();
 
+            Vector.Copy(x, tempX);
+
             do
             {
-                x = x + beta * delta;
+                x = tempX + beta * delta;
 
                 CalcElementsF();
                 currentNorm = CalcNorm(f);
@@ -244,6 +256,15 @@ public class SNE
                     break;
 
             } while (beta > fstEps);
+
+
+            using (var sw = new StreamWriter(path, true))
+            {
+                if (index == 1)
+                    sw.WriteLine("Iterations\tX\tY\tBeta\tNorm");
+
+                sw.WriteLine($"{index}\t{x[0]}\t{x[1]}\t{beta}\t{currentNorm}");
+            }
 
             using (var sw = new StreamWriter("coords.txt", true))
             {
@@ -463,6 +484,16 @@ public class SNE
                 0 => 2 + 4 * Math.Sin(2 * (x[0] + hx) + 1) - (x[1] + hy),
 
                 1 => (x[0] + hx) - (x[1] + hy),
+
+                _ => throw new ArgumentException(message: "Invalid number function",
+                                                 paramName: nameof(numberFunc))
+            },
+
+            Test.seventhTest => numberFunc switch
+            {
+                0 => (x[0] + hx) * (x[0] + hx) + (x[1] + hy) * (x[1] + hy) - 4,
+
+                1 => (x[0] + hx - 3) * (x[0] + hx - 3) + (x[1] + hy - 2) * (x[1] + hy - 2) - 1,
 
                 _ => throw new ArgumentException(message: "Invalid number function",
                                                  paramName: nameof(numberFunc))
