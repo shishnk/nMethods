@@ -2,12 +2,12 @@ using static nMethods_6.Spline;
 
 namespace nMethods_6
 {
-    public class Gauss
+    public class Integration
     {
         Vector<double> points;
         Vector<double> weights;
 
-        public Gauss()
+        public Integration()
         {
             points = new(3);
             weights = new(3);
@@ -21,7 +21,7 @@ namespace nMethods_6
             weights[2] = 5.0 / 9;
         }
 
-        public double Integraion(Basis psi, double x1, double x2)
+        public double GaussOrder5(Basis fstPsi, Basis sndPsi, double x1, double x2)
         {
             double qi, pi;
             double h = 0;
@@ -33,7 +33,7 @@ namespace nMethods_6
                 h = Math.Abs(x2 - x1);
                 pi = (x1 + x2 + points[i] * h) / 2.0;
 
-                result += qi * psi(x1, x2);
+                result += qi * fstPsi(pi, h) * sndPsi(pi, h);
             }
 
             return result * h / 2.0;
