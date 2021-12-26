@@ -62,4 +62,10 @@ public class Vector<T> where T : INumber<T>
         for (int i = 0; i < source.Length; i++)
             destination[i] = source[i];
     }
+
+    public void Fill(T value)
+    {
+        for (int i = 0; i < Length; i++)
+            vec[i] = value;
+    }
 }
