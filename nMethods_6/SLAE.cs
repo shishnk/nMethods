@@ -2,65 +2,31 @@ namespace nMethods_6;
 
 public static class SLAE
 {
-    public static Vector<double> Compute(Matrix matrix, Vector<double> vector)
+    public static Vector<double> Compute(Matrix matrix, Vector<double> f)
     {
-        double max;
-        double eps = 1E-14;
+        Vector<double> x = new(f.Length);
+        Vector<double>.Copy(f, x);
 
-        Vector<double> result = new(vector.Length);
-
-        for (int k = 0; k < matrix.Size; k++)
+        for (int i = 0; i < f.Length; i++)
         {
-            max = Math.Abs(matrix[k, k]);
-            int index = k;
+            double sum = 0;
 
-            for (int i = k + 1; i < matrix.Size; i++)
-            {
-                if (Math.Abs(matrix[i, k]) > max)
-                {
-                    max = Math.Abs(matrix[i, k]);
-                    index = i;
-                }
-            }
+            for (int k = 0; k < i; k++)
+                sum += matrix[i, k] * x[k];
 
-            for (int j = 0; j < matrix.Size; j++)
-            {
-                (matrix[k, j], matrix[index, j]) =
-                    (matrix[index, j], matrix[k, j]);
-            }
-
-            (vector[k], vector[index]) = (vector[index], vector[k]);
-
-            for (int i = k; i < matrix.Size; i++)
-            {
-                double temp = matrix[i, k];
-
-                if (Math.Abs(temp) < eps)
-                    throw new Exception("Zero element of the column");
-
-                for (int j = 0; j < matrix.Size; j++)
-                    matrix[i, j] /= temp;
-
-                vector[i] /= temp;
-
-                if (i != k)
-                {
-                    for (int j = 0; j < matrix.Size; j++)
-                        matrix[i, j] -= matrix[k, j];
-
-                    vector[i] -= vector[k];
-                }
-            }
+            x[i] = (f[i] - sum) / matrix[i, i];
         }
 
-        for (int k = matrix.Size - 1; k >= 0; k--)
+        for (int i = x.Length - 1; i >= 0; i--)
         {
-            result[k] = vector[k];
+            double sum = 0;
 
-            for (int i = 0; i < k; i++)
-                vector[i] = vector[i] - matrix[i, k] * result[k];
+            for (int k = i + 1; k < x.Length; k++)
+                sum += matrix[i, k] * x[k];
+
+            x[i] -= sum;
         }
 
-        return result;
+        return x;
     }
 }
