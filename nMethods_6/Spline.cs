@@ -105,12 +105,12 @@ public class Spline
         }
     }
 
-    private void ChangingFunctionality() // TODO fix index
+    private void ChangingFunctionality()
     {
         for (int ielem = 0; ielem < elements.Length; ielem++)
             for (int i = 0; i < basis.Length; i++)
                 for (int j = 0; j < basis.Length; j++)
-                    matrix[i, j] +=
+                    matrix[ielem + 1 + i, ielem + 1 + j] +=
                     alpha * integration.GaussOrder5(dBasis[i], dBasis[j],
                     elements[ielem].Item1, elements[ielem].Item2) +
                     beta * integration.GaussOrder5(ddBasis[i], ddBasis[j],
