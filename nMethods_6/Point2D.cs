@@ -1,5 +1,6 @@
 namespace nMethods_6;
-public struct Point2D
+
+public record struct Point2D
 {
     public double X { get; init; }
     public double Y { get; init; }

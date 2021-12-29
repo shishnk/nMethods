@@ -1,5 +1,6 @@
 namespace nMethods_6;
-public struct FiniteElement
+
+public record struct FiniteElement
 {
     public double leftBorder { get; init; }
     public double rightBorder { get; init; }
