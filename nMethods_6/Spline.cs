@@ -7,7 +7,7 @@ public class Spline
     Point2D[] points;
     Matrix matrix;
     Vector<double> vector;
-    List<double> result;
+    List<Point2D> result;
     Integration integration;
     double alpha;
     double beta;
@@ -119,7 +119,7 @@ public class Spline
                 for (int i = 0; i < basis.Length; i++)
                     sum += vector[2 * ielem + i] * basis[i](x, h);
 
-                result.Add(sum);
+                result.Add(new(changed.X, sum));
                 changed += (0.2, 0);
                 sum = 0;
 
@@ -132,7 +132,7 @@ public class Spline
         using (var sw = new StreamWriter(path))
         {
             for (int i = 0; i < result.Count; i++)
-                sw.WriteLine(result[i]);
+                sw.WriteLine(result[i].ToString());
         }
     }
 }
