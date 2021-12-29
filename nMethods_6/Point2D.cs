@@ -18,6 +18,13 @@ public struct Point2D
         return point;
     }
 
+    public static Point2D operator +(Point2D point, (double, double) value)
+         => new(point.X + value.Item1, point.Y + value.Item2);
+
+    //public Point2D ProjectionX() => new(X, 0);
+
+    //public Point2D ProjectionY() => new(0, Y);
+
     public override string ToString()
     {
         return $"({X},{Y})";
