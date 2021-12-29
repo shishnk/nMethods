@@ -3,14 +3,22 @@ public struct FiniteElement
 {
     public double leftBorder { get; init; }
     public double rightBorder { get; init; }
+    public double Lenght { get; init; }
 
     public FiniteElement(double left, double right)
     {
         leftBorder = left;
         rightBorder = right;
+        Lenght = Math.Abs(rightBorder - leftBorder);
     }
 
-    public double Lenght() => Math.Abs(rightBorder - leftBorder);
+    public bool Contain(Point2D point)
+    {
+        if (point.X >= leftBorder && point.X <= rightBorder)
+            return true;
+        else
+            return false;
+    }
 
     public static FiniteElement Parse(string elements)
     {
