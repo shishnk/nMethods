@@ -3,16 +3,14 @@ public class Spline
 {
     public delegate double Basis(double x, double h);
     Basis[] basis, dBasis, ddBasis;
-
-    (double, double)[] elements;
-    (double, double)[] points;
+    FiniteElement[] elements;
+    Point2D[] points;
     Matrix matrix;
     Vector<double> vector;
-    Integration integration;
     List<double> result;
+    Integration integration;
     double alpha;
     double beta;
-
 
     public Spline(string pathElements, string pathPoints, string pathParameters)
     {
@@ -20,16 +18,12 @@ public class Spline
         {
             using (var sr = new StreamReader(pathElements))
             {
-                elements = sr.ReadToEnd().Split("\n").Select(row => row.Split(" "))
-                           .Select(value => (double.Parse(value[0]), double.Parse(value[1])))
-                           .ToArray();
+                elements = sr.ReadToEnd().Split("\n").Select(stringElements => FiniteElement.Parse(stringElements)).ToArray();
             }
 
             using (var sr = new StreamReader(pathPoints))
             {
-                points = sr.ReadToEnd().Split("\n").Select(row => row.Split(" "))
-                           .Select(value => (double.Parse(value[0]), double.Parse(value[1])))
-                           .ToArray();
+                points = sr.ReadToEnd().Split("\n").Select(stringPoints => Point2D.Parse(stringPoints)).ToArray();
             }
 
             using (var sr = new StreamReader(pathParameters))
@@ -59,7 +53,6 @@ public class Spline
     public void Compute()
     {
         Assembly();
-        ChangingFunctionality();
         matrix.PrintDense("matrix.txt");
         matrix.LU();
 
@@ -84,58 +77,54 @@ public class Spline
 
         for (int ielem = 0; ielem < elements.Length; ielem++)
         {
-            h = Math.Abs(elements[ielem].Item2 - elements[ielem].Item1);
+            h = elements[ielem].Lenght;
 
             for (int ipoint = 0; ipoint < points.Length; ipoint++)
-                if (points[ipoint].Item1 >= elements[ielem].Item1 &&
-                    points[ipoint].Item1 <= elements[ielem].Item2 && check[ipoint] == 1)
+                if (elements[ielem].Contain(points[ipoint]) && check[ipoint] == 1)
                 {
                     check[ipoint] = -1;
 
-                    x = (points[ipoint].Item1 - elements[ielem].Item1) / h;
+                    x = (points[ipoint].X - elements[ielem].leftBorder) / h;
 
                     for (int i = 0; i < basis.Length; i++)
                     {
-                        vector[2 * ielem + i] += points[ipoint].Item2 * basis[i](x, h);
+                        vector[2 * ielem + i] += points[ipoint].Y * basis[i](x, h);
 
                         for (int j = 0; j < basis.Length; j++)
-                            matrix[2 * ielem + i, 2 * ielem + j] += basis[i](x, h) * basis[j](x, h);
+                            matrix[2 * ielem + i, 2 * ielem + j] += basis[i](x, h) * basis[j](x, h) +
+                            alpha * integration.GaussOrder5(dBasis[i], dBasis[j],
+                            elements[ielem].leftBorder, elements[ielem].rightBorder) +
+                            beta * integration.GaussOrder5(ddBasis[i], ddBasis[j],
+                            elements[ielem].leftBorder, elements[ielem].rightBorder);
                     }
                 }
         }
     }
 
-    private void ChangingFunctionality()
-    {
-        for (int ielem = 0; ielem < elements.Length; ielem++)
-            for (int i = 0; i < basis.Length; i++)
-                for (int j = 0; j < basis.Length; j++)
-                    matrix[ielem + 1 + i, ielem + 1 + j] +=
-                    alpha * integration.GaussOrder5(dBasis[i], dBasis[j],
-                    elements[ielem].Item1, elements[ielem].Item2) +
-                    beta * integration.GaussOrder5(ddBasis[i], ddBasis[j],
-                    elements[ielem].Item1, elements[ielem].Item2);
-    }
-
-
     private void ValueAtPoint()
     {
-        // List<double> result = new();
-        double result = 0;
-
         double x, h;
+        double sum = 0;
+        Point2D changed;
 
-        for (int ielem = 0; ielem < elements.Length - 1; ielem++)
+        for (int ielem = 0; ielem < elements.Length; ielem++)
         {
-            h = Math.Abs(elements[ielem].Item2 - elements[ielem].Item1);
-            x = (-1.1 - elements[ielem].Item1) / h;
+            changed = new(elements[ielem].leftBorder, 0);
+            h = elements[ielem].Lenght;
 
+            do
+            {
+                x = (changed.X - elements[ielem].leftBorder) / h;
 
-            for (int i = 0; i < basis.Length; i++)
-                result += vector[i] * basis[i](x, h);
+                for (int i = 0; i < basis.Length; i++)
+                    sum += vector[2 * ielem + i] * basis[i](x, h);
+
+                result.Add(sum);
+                changed += (0.2, 0);
+                sum = 0;
+
+            } while (elements[ielem].Contain(changed));
         }
-
-        Console.WriteLine(result);
     }
 
     public void WriteToFile(string path)
