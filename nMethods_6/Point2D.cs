@@ -1,16 +1,7 @@
 namespace nMethods_6;
 
-public record struct Point2D
+public readonly record struct Point2D(double X, double Y)
 {
-    public double X { get; init; }
-    public double Y { get; init; }
-
-    public Point2D(double x, double y)
-    {
-        X = x;
-        Y = y;
-    }
-
     public static Point2D Parse(string points)
     {
         var data = points.Split(" ");
