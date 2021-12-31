@@ -74,51 +74,46 @@ public class Spline
         Vector<int> check = new(points.Length);
         check.Fill(1);
 
-        double x, h;
+        double x;
 
         for (int ielem = 0; ielem < elements.Length; ielem++)
-        {
-            h = elements[ielem].Lenght;
-
             for (int ipoint = 0; ipoint < points.Length; ipoint++)
                 if (elements[ielem].Contain(points[ipoint]) && check[ipoint] == 1)
                 {
                     check[ipoint] = -1;
-
-                    x = (points[ipoint].X - elements[ielem].LeftBorder) / h; // $\xi(x) = \dfrac{x - x_i}{h_i}$
+                    x = (points[ipoint].X - elements[ielem].LeftBorder) / elements[ielem].Lenght; // $\xi(x) = \dfrac{x - x_i}{h_i}$
 
                     for (int i = 0; i < basis.Length; i++)
                     {
-                        vector[2 * ielem + i] += points[ipoint].Y * basis[i](x, h);
+                        vector[2 * ielem + i] += points[ipoint].Y * basis[i](x, elements[ielem].Lenght);
 
                         for (int j = 0; j < basis.Length; j++)
-                            matrix[2 * ielem + i, 2 * ielem + j] += basis[i](x, h) * basis[j](x, h) +
+                            matrix[2 * ielem + i, 2 * ielem + j] +=
+                            basis[i](x, elements[ielem].Lenght) * basis[j](x, elements[ielem].Lenght) +
                             alpha * integration.GaussOrder5(dBasis[i], dBasis[j],
                             elements[ielem].LeftBorder, elements[ielem].RightBorder) +
                             beta * integration.GaussOrder5(ddBasis[i], ddBasis[j],
                             elements[ielem].LeftBorder, elements[ielem].RightBorder);
                     }
                 }
-        }
     }
 
     private void ValueAtPoint()
     {
-        double x, h;
+        double x;
         double sum = 0;
         Point2D changed;
 
         for (int ielem = 0; ielem < elements.Length; ielem++)
         {
             changed = new(elements[ielem].LeftBorder, 0);
-            h = elements[ielem].Lenght;
 
             do
             {
-                x = (changed.X - elements[ielem].LeftBorder) / h;
+                x = (changed.X - elements[ielem].LeftBorder) / elements[ielem].Lenght;
 
                 for (int i = 0; i < basis.Length; i++)
-                    sum += vector[2 * ielem + i] * basis[i](x, h);
+                    sum += vector[2 * ielem + i] * basis[i](x, elements[ielem].Lenght);
 
                 result.Add(new(changed.X, sum));
                 changed += (0.2, 0);
