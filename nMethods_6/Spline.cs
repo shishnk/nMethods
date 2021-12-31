@@ -1,4 +1,5 @@
 namespace nMethods_6;
+
 public class Spline
 {
     public delegate double Basis(double x, double h);
@@ -84,7 +85,7 @@ public class Spline
                 {
                     check[ipoint] = -1;
 
-                    x = (points[ipoint].X - elements[ielem].leftBorder) / h;
+                    x = (points[ipoint].X - elements[ielem].LeftBorder) / h; // $\xi(x) = \dfrac{x - x_i}{h_i}$
 
                     for (int i = 0; i < basis.Length; i++)
                     {
@@ -93,9 +94,9 @@ public class Spline
                         for (int j = 0; j < basis.Length; j++)
                             matrix[2 * ielem + i, 2 * ielem + j] += basis[i](x, h) * basis[j](x, h) +
                             alpha * integration.GaussOrder5(dBasis[i], dBasis[j],
-                            elements[ielem].leftBorder, elements[ielem].rightBorder) +
+                            elements[ielem].LeftBorder, elements[ielem].RightBorder) +
                             beta * integration.GaussOrder5(ddBasis[i], ddBasis[j],
-                            elements[ielem].leftBorder, elements[ielem].rightBorder);
+                            elements[ielem].LeftBorder, elements[ielem].RightBorder);
                     }
                 }
         }
@@ -109,12 +110,12 @@ public class Spline
 
         for (int ielem = 0; ielem < elements.Length; ielem++)
         {
-            changed = new(elements[ielem].leftBorder, 0);
+            changed = new(elements[ielem].LeftBorder, 0);
             h = elements[ielem].Lenght;
 
             do
             {
-                x = (changed.X - elements[ielem].leftBorder) / h;
+                x = (changed.X - elements[ielem].LeftBorder) / h;
 
                 for (int i = 0; i < basis.Length; i++)
                     sum += vector[2 * ielem + i] * basis[i](x, h);

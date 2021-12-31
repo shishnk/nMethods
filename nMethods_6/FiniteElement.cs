@@ -2,20 +2,20 @@ namespace nMethods_6;
 
 public record struct FiniteElement
 {
-    public double leftBorder { get; init; }
-    public double rightBorder { get; init; }
+    public double LeftBorder { get; init; }
+    public double RightBorder { get; init; }
     public double Lenght { get; init; }
 
     public FiniteElement(double left, double right)
     {
-        leftBorder = left;
-        rightBorder = right;
-        Lenght = Math.Abs(rightBorder - leftBorder);
+        LeftBorder = left;
+        RightBorder = right;
+        Lenght = Math.Abs(RightBorder - LeftBorder);
     }
 
     public bool Contain(Point2D point)
     {
-        if (point.X >= leftBorder && point.X <= rightBorder)
+        if (point.X >= LeftBorder && point.X <= RightBorder)
             return true;
         else
             return false;
@@ -31,6 +31,6 @@ public record struct FiniteElement
 
     public override string ToString()
     {
-        return $"Element interval is [{leftBorder}, {rightBorder}]";
+        return $"Element interval is [{LeftBorder}, {RightBorder}]";
     }
 }
