@@ -5,10 +5,10 @@ public class Spline
     public delegate double Basis(double x, double h);
     Basis[] basis, dBasis, ddBasis;
     FiniteElement[] elements;
-    Point2D[] points;
+    Point[] points;
     Matrix matrix;
     Vector<double> vector;
-    List<Point2D> result;
+    List<Point> result;
     Integration integration;
     double alpha;
     double beta;
@@ -19,12 +19,14 @@ public class Spline
         {
             using (var sr = new StreamReader(pathElements))
             {
-                elements = sr.ReadToEnd().Split("\n").Select(stringElements => FiniteElement.Parse(stringElements)).ToArray();
+                elements = sr.ReadToEnd().Split("\n").Select(stringElements => stringElements.Split())
+                .Select(element => new FiniteElement(double.Parse(element[0]), double.Parse(element[1]))).ToArray();
             }
 
             using (var sr = new StreamReader(pathPoints))
             {
-                points = sr.ReadToEnd().Split("\n").Select(stringPoints => Point2D.Parse(stringPoints)).ToArray();
+                points = sr.ReadToEnd().Split("\n").Select(stringPoints => stringPoints.Split())
+                .Select(point => new Point(double.Parse(point[0]),double.Parse(point[1]))).ToArray();
             }
 
             using (var sr = new StreamReader(pathParameters))
@@ -56,16 +58,7 @@ public class Spline
         Assembly();
         matrix.PrintDense("matrix.txt");
         matrix.LU();
-
-        try
-        {
-            vector = SLAE.Compute(matrix, vector);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-
+        vector = SLAE.Compute(matrix, vector);
         ValueAtPoint();
     }
 
@@ -102,7 +95,7 @@ public class Spline
     {
         double x;
         double sum = 0;
-        Point2D changed;
+        Point changed;
 
         for (int ielem = 0; ielem < elements.Length; ielem++)
         {

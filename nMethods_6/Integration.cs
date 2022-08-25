@@ -1,7 +1,8 @@
 using static nMethods_6.Spline;
 
 namespace nMethods_6;
-    public class Integration
+
+public class Integration
 {
     Vector<double> points;
     Vector<double> weights;

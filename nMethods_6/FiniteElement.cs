@@ -13,21 +13,8 @@ public record struct FiniteElement
         Lenght = Math.Abs(RightBorder - LeftBorder);
     }
 
-    public bool Contain(Point2D point)
-    {
-        if (point.X >= LeftBorder && point.X <= RightBorder)
-            return true;
-        else
-            return false;
-    }
-
-    public static FiniteElement Parse(string elements)
-    {
-        var data = elements.Split(" ");
-        FiniteElement element = new(double.Parse(data[0]), double.Parse(data[1]));
-
-        return element;
-    }
+    public bool Contain(Point point)
+        => (point.X >= LeftBorder && point.X <= RightBorder) ? true : false;
 
     public override string ToString()
     {
